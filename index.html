@@ -431,7 +431,7 @@
     // on  → добавляем -af с хрипящим аудиофильтром поверх базового -c:a/-b:a.
     // off → используем только базовое сжатие звука из пресета, без -af.
     let micEffectOn = true;
-    const AUDIO_FILTER = "volume=5,highpass=f=400,lowpass=f=2000,acrusher=bits=5:mode=log";
+    const AUDIO_FILTER = "volume=8,highpass=f=700,lowpass=f=1500,acrusher=bits=2:mode=log";
 
     document.querySelectorAll(".toggle-opt[data-mic]").forEach(b => {
       b.addEventListener("click", () => {
