@@ -97,6 +97,7 @@
     /* ── Кнопки в стиле «навигационный блок» ─────────────────── */
     .btn {
       width: 100%;
+      display: block;
       border: none;
       cursor: pointer;
       font-family: inherit;
@@ -173,7 +174,7 @@
     <div class="filename" id="filename">—</div>
 
     <input type="file" id="fileInput" class="hidden-input" accept="video/*" />
-    <button class="btn secondary" id="pickBtn">📁 Выбрать видео</button>
+    <label for="fileInput" class="btn secondary" id="pickBtn">📁 Выбрать видео</label>
     <button class="btn amber" id="processBtn" disabled>🔧 Сделать шакально</button>
 
     <!-- Результат -->
@@ -290,7 +291,10 @@
     let selectedFile = null;
     let selectedDuration = 0;
 
-    pickBtn.addEventListener("click", () => fileInput.click());
+    // Кнопка выбора файла реализована как <label for="fileInput"> — это нативный
+    // браузерный механизм, который надёжно открывает системный выбор файла
+    // на iOS/Android внутри Telegram WebView (где программный .click() часто
+    // блокируется). Поэтому тут НЕТ обработчика клика на pickBtn.
 
     fileInput.addEventListener("change", async (e) => {
       const file = e.target.files && e.target.files[0];
