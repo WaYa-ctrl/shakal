@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
   <title>📱 Вернись в 2007-й</title>
 
-  <!-- Telegram Mini App SDK -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
   <style>
@@ -140,7 +139,16 @@
     .result-actions .btn { margin-top: 0; }
 
     .warn { font-size: 10px; color: #ffb380; text-align:center; margin-top: 12px; line-height: 1.4;}
-    .hidden-input { display: none; }
+    
+    /* Исправленный класс для инпута */
+    .hidden-input {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      opacity: 0;
+      z-index: -1;
+    }
+    
     .spinner { display:inline-block; width:12px; height:12px; border:2px solid rgba(255,255,255,.3); border-top-color:#fff; border-radius:50%; animation: spin .7s linear infinite; vertical-align: middle; margin-right:6px;}
     @keyframes spin { to { transform: rotate(360deg); } }
   </style>
@@ -149,7 +157,6 @@
   <div class="phone">
     <div class="brand">📱 SHAKAL · 2007 EDITION</div>
 
-    <!-- LCD-экран -->
     <div class="screen">
       <div class="lcd-title" id="lcdTitle">ВЕРНИСЬ В 2007-Й</div>
       <div class="lcd-status" id="lcdStatus">Выбери видео и верни его в эпоху пикселей</div>
@@ -164,7 +171,6 @@
       </div>
     </div>
 
-    <!-- Пресеты качества -->
     <div class="presets">
       <button class="preset active" data-preset="q_2007">📱 2007<small>176×144</small></button>
       <button class="preset" data-preset="q_brick">📟 BRICK<small>128×96</small></button>
@@ -177,7 +183,6 @@
     <label for="fileInput" class="btn secondary" id="pickBtn">📁 Выбрать видео</label>
     <button class="btn amber" id="processBtn" disabled>🔧 Сделать шакально</button>
 
-    <!-- Результат -->
     <div class="result-wrap" id="resultWrap">
       <video class="result-video" id="resultVideo" autoplay loop muted playsinline controls></video>
       <div class="result-actions">
@@ -192,7 +197,6 @@
     </div>
   </div>
 
-  <!-- ffmpeg.wasm (однопоточная сборка — НЕ требует SharedArrayBuffer) -->
   <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.12.10/dist/umd/ffmpeg.js"></script>
   <script src="https://unpkg.com/@ffmpeg/util@0.12.10/dist/umd/index.js"></script>
 
@@ -200,11 +204,9 @@
   (function () {
     "use strict";
 
-    // ── Telegram WebApp ───────────────────────────────────────
     const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
     if (tg) { tg.expand(); tg.ready && tg.ready(); }
 
-    // Часы на «экране» для атмосферы
     function tick() {
       const d = new Date();
       const z = n => String(n).padStart(2, "0");
@@ -213,7 +215,6 @@
     }
     tick(); setInterval(tick, 30000);
 
-    // ── DOM ───────────────────────────────────────────────────
     const $ = id => document.getElementById(id);
     const lcdStatus = $("lcdStatus"), lcdTitle = $("lcdTitle");
     const progressWrap = $("progressWrap"), progressFill = $("progressFill"), progressPct = $("progressPct");
@@ -229,8 +230,6 @@
       progressPct.textContent = pct + "%";
     }
 
-    // ── Пресеты (значения = те, что в Python-боте) ────────────
-    // Порядок фильтров оптимизирован: scale → eq → noise (на крошечном кадре — быстро).
     const PRESETS = {
       q_brick: {
         title: "📟 Brick 2003",
@@ -239,9 +238,7 @@
                "-ac", "1", "-ar", "8000", "-c:a", "aac", "-b:a", "12k"]
       },
       q_2007: {
-        title: "📱 2007 (классика)",
-        // ИСХОДНЫЙ фильтр из ТЗ, оптимизированный по порядку:
-        // eq=contrast=1.4:brightness=0.15:saturation=1.6, scale=176:144:flags=neighbor, noise=c0s=30:c1s=40:allf=t
+        title: "📱 2007",
         args: ["-vf", "scale=176:144:flags=neighbor,eq=contrast=1.4:brightness=0.15:saturation=1.6,noise=c0s=30:c1s=40:allf=t",
                "-r", "10", "-c:v", "libx264", "-b:v", "70k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
                "-ac", "1", "-ar", "8000", "-c:a", "aac", "-b:a", "16k"]
@@ -263,7 +260,6 @@
       });
     });
 
-    // ── ffmpeg.wasm ───────────────────────────────────────────
     const { FFmpeg } = FFmpegWASM;
     const { toBlobURL, fetchFile } = FFmpegUtil;
     const CORE_BASE = "https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd";
@@ -272,12 +268,10 @@
 
     async function ensureFFmpeg() {
       if (ffmpegReady) return ffmpeg;
-      setStatus('<span class="spinner"></span>Загружаю движок FFmpeg (~25 МБ, один раз)...');
+      setStatus('<span class="spinner"></span>Загружаю движок FFmpeg (~25 МБ)...');
       processBtn.disabled = true;
       ffmpeg = new FFmpeg();
-      // Прогресс с этапа загрузки ядра не привязан — используем «log» как индикатор жизни.
       ffmpeg.on("log", ({ message }) => {
-        // Показываем короткие строки лога, чтобы экран «жил».
         if (message && message.length < 60) setStatus("⚙️ " + message);
       });
       const coreURL = await toBlobURL(`${CORE_BASE}/ffmpeg-core.js`, "text/javascript");
@@ -287,21 +281,12 @@
       return ffmpeg;
     }
 
-    // ── Выбор файла ───────────────────────────────────────────
-    let selectedFile = null;
-    let selectedDuration = 0;
-
-    // Кнопка выбора файла реализована как <label for="fileInput"> — это нативный
-    // браузерный механизм, который надёжно открывает системный выбор файла
-    // на iOS/Android внутри Telegram WebView (где программный .click() часто
-    // блокируется). Поэтому тут НЕТ обработчика клика на pickBtn.
-
+    // ИСПРАВЛЕННЫЙ БЛОК ВЫБОРА ФАЙЛА
     fileInput.addEventListener("change", (e) => {
       const file = e.target.files && e.target.files[0];
       if (!file) return;
 
-      // Лимит размера
-      const MAX_BYTES = 100 * 1024 * 1024; // 100 МБ
+      const MAX_BYTES = 100 * 1024 * 1024;
       if (file.size > MAX_BYTES) {
         setStatus("❌ Файл слишком большой (лимит 100 МБ).");
         return;
@@ -316,7 +301,6 @@
       setStatus("Готово к обработке. Жми «Сделать шакально» 🔧");
     });
 
-    // ── Обработка ─────────────────────────────────────────────
     processBtn.addEventListener("click", async () => {
       if (!selectedFile) return;
       resultWrap.classList.remove("active");
@@ -332,13 +316,11 @@
         const outName = "output.mp4";
         await ff.writeFile(inName, await fetchFile(selectedFile));
 
-        // Прогресс привязан к обработке (0..1).
         const progressHandler = ({ progress }) => setProgress(progress);
         ff.on("progress", progressHandler);
 
         setStatus("⚙️ Кодирую... телефон старается изо всех сил");
 
-        // Сборка аргументов: -i input + пресет + output
         const args = ["-i", inName].concat(PRESETS[currentPreset].args).concat([outName]);
         await ff.exec(args);
 
@@ -348,7 +330,6 @@
         setStatus("📦 Читаю результат...");
         const data = await ff.readFile(outName);
 
-        // Чистим память wasm.
         try { await ff.deleteFile(inName); await ff.deleteFile(outName); } catch (_) {}
 
         const blob = new Blob([data.buffer], { type: "video/mp4" });
@@ -358,10 +339,8 @@
         setTitle("ГОТОВО — 2007");
         setStatus("📱 " + PRESETS[currentPreset].title + " — готов! Сохрани или отправь.");
 
-        // Прокрутка к результату.
         resultWrap.scrollIntoView({ behavior: "smooth", block: "nearest" });
 
-        // Запоминаем blob для кнопок.
         lastBlob = blob;
         lastFileName = "shkal_" + Date.now() + ".mp4";
       } catch (err) {
@@ -378,7 +357,6 @@
       return m ? "." + m[1].toLowerCase() : ".mp4";
     }
 
-    // ── Скачать / поделиться / ещё раз ────────────────────────
     let lastBlob = null, lastFileName = "shkal.mp4";
 
     downloadBtn.addEventListener("click", () => {
@@ -394,18 +372,14 @@
     shareBtn.addEventListener("click", async () => {
       if (!lastBlob) return;
       const file = new File([lastBlob], lastFileName, { type: "video/mp4" });
-      // Web Share API с файлами — открывает системную шеринговую панель
-      // (можно выбрать Telegram → отправить в чат/контакту). Поддерживается не везде.
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         try {
           await navigator.share({ files: [file], title: "Шакал 2007", text: "📱 2007 позвонил..." });
           return;
         } catch (e) {
-          if (e && e.name === "AbortError") return; // пользователь отменил
+          if (e && e.name === "AbortError") return; 
         }
       }
-      // tg.sendData не передаёт файлы (>4096 байт) — это ограничение Telegram.
-      // Поэтому предлагаем просто скачать и переслать вручную.
       setStatus("📤 Прямая отправка файла из Mini App невозможна. 👇 Нажми «Скачать», затем перешли видео в чат вручную.");
       downloadBtn.click();
     });
@@ -422,9 +396,6 @@
       processBtn.disabled = true;
     });
 
-    // Подсказка по времени обработки в зависимости от длительности.
-    // (не блокируем, просто информируем)
-    fileInput.addEventListener && null;
   })();
   </script>
 </body>
