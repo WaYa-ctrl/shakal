@@ -5,11 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
   <title>📱 Вернись в 2007-й</title>
 
-  <!-- Telegram Mini App SDK -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
   <style>
-    /* ── Базовый сброс ───────────────────────────────────────── */
     * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     html, body { height: 100%; }
     body {
@@ -23,7 +21,6 @@
       overflow-x: hidden;
     }
 
-    /* ── Корпус «телефона» ──────────────────────────────────── */
     .phone {
       width: 100%;
       max-width: 420px;
@@ -35,91 +32,50 @@
     }
 
     .brand {
-      text-align: center;
-      font-size: 11px;
-      letter-spacing: 3px;
-      color: #9fb2c4;
-      margin-bottom: 10px;
-      text-transform: uppercase;
+      text-align: center; font-size: 11px; letter-spacing: 3px;
+      color: #9fb2c4; margin-bottom: 10px; text-transform: uppercase;
     }
 
-    /* ── LCD-экран (как на старом телефоне) ─────────────────── */
     .screen {
-      background: #0c1a0c;
-      border: 4px solid #1a2a1a;
-      border-radius: 10px;
-      padding: 14px;
-      box-shadow: inset 0 0 22px rgba(0,0,0,.7), inset 0 0 0 2px #0a130a;
-      min-height: 120px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin-bottom: 14px;
+      background: #0c1a0c; border: 4px solid #1a2a1a; border-radius: 10px;
+      padding: 14px; box-shadow: inset 0 0 22px rgba(0,0,0,.7), inset 0 0 0 2px #0a130a;
+      min-height: 120px; display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px;
     }
     .lcd-title {
-      color: #7CFC00;
-      font-size: 15px;
-      text-shadow: 0 0 6px rgba(124,252,0,.55);
-      text-align: center;
-      letter-spacing: 1px;
+      color: #7CFC00; font-size: 15px; text-shadow: 0 0 6px rgba(124,252,0,.55);
+      text-align: center; letter-spacing: 1px;
     }
     .lcd-status {
-      color: #9fe870;
-      font-size: 12px;
-      text-shadow: 0 0 5px rgba(124,252,0,.45);
-      text-align: center;
-      min-height: 16px;
-      line-height: 1.4;
+      color: #9fe870; font-size: 12px; text-shadow: 0 0 5px rgba(124,252,0,.45);
+      text-align: center; min-height: 16px; line-height: 1.4;
     }
     .lcd-signal {
-      display: flex; justify-content: space-between;
-      color: #4a7a3a; font-size: 10px;
+      display: flex; justify-content: space-between; color: #4a7a3a; font-size: 10px;
       border-top: 1px dashed #2a4a2a; padding-top: 6px; margin-top: auto;
     }
 
-    /* ── Прогресс-бар ────────────────────────────────────────── */
-    .progress-wrap {
-      display: none;
-      flex-direction: column; gap: 5px; margin-top: 4px;
-    }
+    .progress-wrap { display: none; flex-direction: column; gap: 5px; margin-top: 4px; }
     .progress-wrap.active { display: flex; }
-    .progress-bar {
-      height: 14px; border: 1px solid #2a4a2a; background: #06100a;
-      border-radius: 3px; overflow: hidden;
-    }
-    .progress-fill {
-      height: 100%; width: 0%;
-      background: repeating-linear-gradient(45deg, #7CFC00 0 6px, #5fd400 6px 12px);
-      transition: width .25s linear;
-    }
+    .progress-bar { height: 14px; border: 1px solid #2a4a2a; background: #06100a; border-radius: 3px; overflow: hidden; }
+    .progress-fill { height: 100%; width: 0%; background: repeating-linear-gradient(45deg, #7CFC00 0 6px, #5fd400 6px 12px); transition: width .25s linear; }
     .progress-pct { color: #9fe870; font-size: 11px; text-align: center; }
 
-    /* ── Кнопки в стиле «навигационный блок» ─────────────────── */
     .btn {
-      width: 100%;
-      display: block;
-      border: none;
-      cursor: pointer;
-      font-family: inherit;
-      font-weight: bold;
-      padding: 14px 12px;
-      border-radius: 10px;
-      font-size: 14px;
-      letter-spacing: .5px;
-      transition: transform .05s ease, filter .15s ease;
-      background: linear-gradient(180deg, #2c6fb0 0%, #124b8c 100%);
-      color: #fff;
+      width: 100%; display: block; border: none; cursor: pointer; font-family: inherit;
+      font-weight: bold; padding: 14px 12px; border-radius: 10px; font-size: 14px;
+      letter-spacing: .5px; transition: transform .05s ease, filter .15s ease;
+      background: linear-gradient(180deg, #2c6fb0 0%, #124b8c 100%); color: #fff;
       box-shadow: 0 3px 0 #0a3361, 0 6px 14px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.25);
+      text-align: center;
     }
     .btn:active { transform: translateY(3px); box-shadow: 0 0 0 #0a3361, 0 2px 6px rgba(0,0,0,.4); }
     .btn:disabled { filter: grayscale(.7) brightness(.6); cursor: not-allowed; box-shadow: none; transform: none; }
     .btn.secondary { background: linear-gradient(180deg,#4a5664 0%,#2c3640 100%); box-shadow: 0 3px 0 #1a232c, 0 6px 14px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.2); }
     .btn.amber { background: linear-gradient(180deg,#ff9d2e 0%,#e0701a 100%); box-shadow: 0 3px 0 #9c4a0c, 0 6px 14px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.3); }
-    .btn + .btn { margin-top: 10px; }
 
-    /* ── Пресеты качества ────────────────────────────────────── */
-    /* auto-fit: на телефоне ~3 в ряд (3+2), на узком экране ~2 в ряд (2+2+1). */
-    .presets { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 8px; margin-bottom: 14px; }
+    .input-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+    
+    .presets { display: grid; grid-template-columns: repeat(2,1fr); gap: 8px; margin-bottom: 14px; }
     .preset {
       border: 2px solid #3a4654; background: #1a232c; color: #9fb2c4;
       font-family: inherit; font-size: 11px; font-weight: bold;
@@ -129,51 +85,16 @@
     .preset small { display:block; font-weight:normal; opacity:.7; font-size:9px; margin-top:3px;}
     .preset.active { border-color: #7CFC00; color: #7CFC00; background: #0c1a0c; box-shadow: 0 0 10px rgba(124,252,0,.25);}
 
-    /* ── Доп. переключатели (пропорции / звук микрофона) ───────── */
-    .toggles { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
-    .toggle-row {
-      display: flex; align-items: center; justify-content: space-between;
-      border: 2px solid #3a4654; background: #1a232c; border-radius: 8px;
-      padding: 8px 10px;
-    }
-    .toggle-label { font-size: 11px; font-weight: bold; color: #9fb2c4; line-height: 1.3; }
-    .toggle-label small { display:block; font-weight:normal; opacity:.7; font-size:9px; margin-top:2px; }
-    .toggle-switch {
-      display: flex; border: 2px solid #3a4654; border-radius: 7px; overflow: hidden;
-      flex-shrink: 0;
-    }
-    .toggle-opt {
-      border: none; background: #1a232c; color: #9fb2c4;
-      font-family: inherit; font-size: 10px; font-weight: bold;
-      padding: 7px 10px; cursor: pointer; transition: all .15s ease;
-      white-space: nowrap;
-    }
-    .toggle-opt.active { color: #7CFC00; background: #0c1a0c; box-shadow: inset 0 0 8px rgba(124,252,0,.25); }
-    .toggle-opt.active.warn-amber { color: #ff9d2e; background: #2a1a0c; box-shadow: inset 0 0 8px rgba(255,157,46,.25); }
-
-    /* ── Превью / результат ──────────────────────────────────── */
     .filename { font-size: 11px; color: #9fb2c4; text-align:center; word-break: break-all; margin-bottom: 10px; min-height: 14px;}
     .result-wrap { display:none; margin-top: 14px; }
     .result-wrap.active { display:block; }
-    .result-video {
+    
+    .result-video, .result-image {
       width: 100%; border-radius: 10px; border: 3px solid #4a5664; background:#000;
-      box-shadow: inset 0 0 20px rgba(0,0,0,.7);
+      box-shadow: inset 0 0 20px rgba(0,0,0,.7); display: none;
     }
-    /* Портретный режим превью для вертикальных пресетов (S-2012, Phonk):
-       видео/фото узкое/высокое и по центру, без чёрных полос по бокам и без
-       растягивания на всю ширину корпуса. Класс вешается из JS (см.
-       applyResultOrientation) по признаку height > width. Работает и для
-       <video>, и для <img>. */
-    .result-video.portrait {
-      width: auto;
-      max-width: 100%;
-      max-height: 58vh;
-      margin: 0 auto;
-      display: block;
-    }
+    
     .result-actions { display:grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
-    .result-actions .btn { margin-top: 0; }
-
     .warn { font-size: 10px; color: #ffb380; text-align:center; margin-top: 12px; line-height: 1.4;}
     .hidden-input { display: none; }
     .spinner { display:inline-block; width:12px; height:12px; border:2px solid rgba(255,255,255,.3); border-top-color:#fff; border-radius:50%; animation: spin .7s linear infinite; vertical-align: middle; margin-right:6px;}
@@ -184,10 +105,9 @@
   <div class="phone">
     <div class="brand">📱 SHAKAL · 2007 EDITION</div>
 
-    <!-- LCD-экран -->
     <div class="screen">
-      <div class="lcd-title" id="lcdTitle">ВЕРНИСЬ В 2007-Й</div>
-      <div class="lcd-status" id="lcdStatus">Выбери фото или видео и верни его в эпоху пикселей</div>
+      <div class="lcd-title" id="lcdTitle">ВЫБЕРИ СТИЛЬ</div>
+      <div class="lcd-status" id="lcdStatus">Загрузи фото или видео для обработки</div>
       <div class="progress-wrap" id="progressWrap">
         <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
         <div class="progress-pct" id="progressPct">0%</div>
@@ -199,7 +119,6 @@
       </div>
     </div>
 
-    <!-- Пресеты качества (порядок — по эпохам, Phonk — отдельный ночной стиль) -->
     <div class="presets">
       <button class="preset active" data-preset="q_2007">📱 2007<small>176×144</small></button>
       <button class="preset" data-preset="q_2010">📺 2010<small>320×240</small></button>
@@ -209,158 +128,41 @@
 
     <div class="filename" id="filename">—</div>
 
-    <!-- Доп. настройки обработки -->
-    <div class="toggles">
-      <div class="toggle-row">
-        <span class="toggle-label">📐 Пропорции<small>как кадрировать фото/видео</small></span>
-        <div class="toggle-switch" id="aspectToggle" data-value="squash">
-          <button type="button" class="toggle-opt active" data-aspect="squash">Сплюснуть</button>
-          <button type="button" class="toggle-opt" data-aspect="original">Оригинал</button>
-        </div>
-      </div>
-      <div class="toggle-row">
-        <span class="toggle-label">🎙️ Сломанный микрофон<small>хрипящий звук эпохи (только видео)</small></span>
-        <div class="toggle-switch" id="micToggle" data-value="on">
-          <button type="button" class="toggle-opt active" data-mic="on">Вкл</button>
-          <button type="button" class="toggle-opt" data-mic="off">Выкл</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Два способа выбрать исходник: из галереи или снять камерой.
-         Оба скрытых <input> ведут в одну и ту же логику (handleFileSelected). -->
     <input type="file" id="fileInput" class="hidden-input" accept="video/*, image/*" />
     <input type="file" id="cameraInput" class="hidden-input" accept="video/*, image/*" capture="environment" />
-    <label for="fileInput" class="btn secondary">📁 Из галереи</label>
-    <label for="cameraInput" class="btn secondary">📸 Снять сейчас</label>
-    <button class="btn amber" id="processBtn" disabled>🔧 Сделать шакально</button>
+    
+    <div class="input-wrap">
+      <label for="fileInput" class="btn secondary">📁 Галерея</label>
+      <label for="cameraInput" class="btn secondary">📸 Камера</label>
+    </div>
+    
+    <button class="btn amber" id="processBtn" disabled style="margin-top:0;">🔧 Обработать</button>
 
-    <!-- Результат. <video> и <img> лежат рядом; показывается тот, что
-         соответствует типу обработанного файла (видео → mp4, фото → jpg). -->
     <div class="result-wrap" id="resultWrap">
       <video class="result-video" id="resultVideo" autoplay loop muted playsinline controls></video>
-      <img class="result-video" id="resultImage" alt="" style="display:none;" />
+      <img class="result-image" id="resultImage" />
       <div class="result-actions">
-        <button class="btn" id="shareBtn">💾 Сохранить / Поделиться</button>
-        <button class="btn secondary" id="downloadBtn">👁️ Открыть файл</button>
+        <button class="btn" id="downloadBtn">💾 Скачать</button>
+        <button class="btn secondary" id="shareBtn">📤 В чат</button>
       </div>
       <button class="btn secondary" id="againBtn" style="margin-top:10px;">🔄 Ещё раз</button>
     </div>
 
     <div class="warn" id="warn">
-      ⚠️ Первая обработка грузит движок (~25 МБ). Длинные ролики и большие фото обрабатываются долго — телефон делает всю работу сам.
+      ⚠️ Первая обработка грузит движок (~25 МБ). Телефон делает всю работу сам, без серверов.
     </div>
   </div>
 
-  <!-- ffmpeg.wasm и util грузятся динамически из JS со своего хостинга
-       (папка vendor/, см. ниже VENDOR_BASE) — без сторонних CDN. -->
+  <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.12.10/dist/umd/ffmpeg.js"></script>
+  <script src="https://unpkg.com/@ffmpeg/util@0.12.10/dist/umd/index.js"></script>
 
   <script>
   (function () {
     "use strict";
 
-    // ── Загрузка ffmpeg.wasm со своего хостинга (НЕ с CDN) ────
-    // ВАЖНО: unpkg.com и cdn.jsdelivr.net недоступны из РФ (блокировка
-    // на уровне провайдера), поэтому раньше тут была CDN-логика с
-    // fallback — она не помогала, потому что блокировка не зависит от
-    // конкретного CDN-домена. Решение: файлы ffmpeg.wasm лежат рядом с
-    // index.html (папка vendor/) и грузятся с того же хоста, что и сама
-    // страница — никакого стороннего CDN не остаётся в цепочке.
-    //
-    // Состав папки vendor/ (должна лежать рядом с этим index.html):
-    //   vendor/ffmpeg.js              — из @ffmpeg/ffmpeg, dist/umd/ffmpeg.js
-    //   vendor/814.ffmpeg.js          — ОБЯЗАТЕЛЬНО рядом! это чанк-файл,
-    //                                   который ffmpeg.js подгружает сам
-    //                                   (webpack разбил UMD-сборку на 2 файла)
-    //   vendor/ffmpeg-util.js         — из @ffmpeg/util, dist/umd/index.js
-    //   vendor/ffmpeg-core.js         — из @ffmpeg/core, dist/umd/ffmpeg-core.js
-    //   vendor/ffmpeg-core.wasm.part00 — 1-я часть движка (см. WASM_PARTS ниже)
-    //   vendor/ffmpeg-core.wasm.part01 — 2-я часть движка
-    //   (сам .wasm весит ~31 МБ — больше лимита GitHub на загрузку файла
-    //   через веб-форму, 25 МБ, поэтому он разбит на 2 части поменьше и
-    //   склеивается обратно в браузере — см. loadWasmFromParts ниже)
-    const VENDOR_BASE = "vendor"; // относительный путь от index.html
-    // Cache-busting: GitHub Pages и браузеры могут долго кешировать
-    // статику по старому URL. Если меняешь файлы в vendor/ и проблема
-    // не пропадает — увеличь это число, чтобы заставить браузер скачать
-    // файлы заново, а не взять их из кеша.
-    const ASSET_VERSION = "v2";
-
-    function loadScript(url, timeoutMs = 20000) {
-      return new Promise((resolve, reject) => {
-        const s = document.createElement("script");
-        let done = false;
-        const timer = setTimeout(() => {
-          if (done) return;
-          done = true;
-          s.remove();
-          reject(new Error("Таймаут (" + (timeoutMs / 1000) + "с): " + url));
-        }, timeoutMs);
-        s.src = url;
-        s.onload = () => {
-          if (done) return;
-          done = true;
-          clearTimeout(timer);
-          resolve(url);
-        };
-        s.onerror = () => {
-          if (done) return;
-          done = true;
-          clearTimeout(timer);
-          reject(new Error("Файл не найден: " + url + " (проверь, что папка vendor/ загружена на хостинг рядом с index.html)"));
-        };
-        document.head.appendChild(s);
-      });
-    }
-
-    // Промис, который резолвится, когда обе библиотеки точно в window.
-    // Грузим ТИХО в фоне — без промежуточных статусов на LCD-экране.
-    // Раньше тут писалось «Загружаю ffmpeg.js...» / «Загружаю util.js...»,
-    // и после успешной загрузки последний статус оставался висеть —
-    // выглядело как «бесконечная загрузка util.js», хотя движок уже был
-    // готов. Теперь стартовый текст экрана не перекрывается, а статус
-    // загрузки появляется только когда пользователь реально нажмёт
-    // «Сделать шакально» (см. ensureFFmpeg — там «Загружаю движок FFmpeg...»).
-    const ffmpegLibsLoaded = (async () => {
-      await loadScript(`${VENDOR_BASE}/ffmpeg.js?${ASSET_VERSION}`);
-      await loadScript(`${VENDOR_BASE}/ffmpeg-util.js?${ASSET_VERSION}`);
-    })();
-    ffmpegLibsLoaded.catch((err) => {
-      console.error("Не удалось загрузить библиотеки ffmpeg.wasm:", err);
-      // Не показываем ошибку сразу на экране — попробуем ещё раз
-      // лениво при нажатии «Сделать шакально» (см. ensureFFmpeg).
-    });
-
-    // setStatus определена ниже после DOM-привязок; на случай если этот
-    // код выполнится раньше — безопасная обёртка без падения.
-    function setStatusSafe(html) {
-      const el = document.getElementById("lcdStatus");
-      if (el) el.innerHTML = html;
-    }
-
-
-
-    // ── Telegram WebApp ───────────────────────────────────────
     const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
     if (tg) { tg.expand(); tg.ready && tg.ready(); }
 
-    // ── Диагностика: показываем любую неотловленную ошибку на LCD-экране ──
-    // Без этого скрипт может "молча" падать (например, если CDN с ffmpeg.wasm
-    // не успел отдать библиотеку), и пользователь просто не видит реакции
-    // после выбора файла — кнопка-то нативная, а вот обработка уже на JS.
-    window.addEventListener("error", (e) => {
-      const el = document.getElementById("lcdStatus");
-      if (el) el.innerHTML = "❌ Скрипт упал: " + (e.message || "неизвестная ошибка");
-      console.error("Global error:", e.error || e.message);
-    });
-    window.addEventListener("unhandledrejection", (e) => {
-      const el = document.getElementById("lcdStatus");
-      const msg = (e.reason && e.reason.message) ? e.reason.message : String(e.reason);
-      if (el) el.innerHTML = "❌ Ошибка: " + msg;
-      console.error("Unhandled rejection:", e.reason);
-    });
-
-    // Часы на «экране» для атмосферы
     function tick() {
       const d = new Date();
       const z = n => String(n).padStart(2, "0");
@@ -369,13 +171,11 @@
     }
     tick(); setInterval(tick, 30000);
 
-    // ── DOM ───────────────────────────────────────────────────
     const $ = id => document.getElementById(id);
     const lcdStatus = $("lcdStatus"), lcdTitle = $("lcdTitle");
     const progressWrap = $("progressWrap"), progressFill = $("progressFill"), progressPct = $("progressPct");
-    const fileInput = $("fileInput"), cameraInput = $("cameraInput"), processBtn = $("processBtn");
-    const filenameEl = $("filename"), resultWrap = $("resultWrap");
-    const resultVideo = $("resultVideo"), resultImage = $("resultImage");
+    const processBtn = $("processBtn"), filenameEl = $("filename");
+    const resultWrap = $("resultWrap"), resultVideo = $("resultVideo"), resultImage = $("resultImage");
     const downloadBtn = $("downloadBtn"), shareBtn = $("shareBtn"), againBtn = $("againBtn");
 
     function setStatus(t) { lcdStatus.innerHTML = t; }
@@ -386,124 +186,33 @@
       progressPct.textContent = pct + "%";
     }
 
-    // ── Пресеты ───────────────────────────────────────────────
-    // Порядок фильтров: scale → eq → noise (на крошечном кадре — быстро).
-    // Здесь хранятся ТОЛЬКО БАЗОВЫЕ данные пресета:
-    //   width/height  — целевое разрешение для scale;
-    //   scaleFlags    — алгоритм масштабирования (опц.):
-    //                   "neighbor" (по умолч.) = пиксельный nearest-neighbor,
-    //                   "" = дефолт FFmpeg (плавнее, для Android/Phonk);
-    //   vfPostScale   — видеофильтр ПОСЛЕ scale (eq/noise/vignette), без самого scale;
-    //   audioFilter   — особый аудиофильтр для «сломанного микрофона»
-    //                   (опц.; если нет — берётся DEFAULT_AUDIO_FILTER);
-    //   encodeArgs    — параметры кодирования БЕЗ -vf и -af (видео).
-    // Сама строка -vf (с учётом переключателя «Пропорции») и аргумент -af
-    // (с учётом переключателя «Сломанный микрофон») собираются динамически
-    // в processBtn — см. buildVideoFilter() и DEFAULT_AUDIO_FILTER.
-    // Эта же строка -vf переиспользуется и для фото (см. ветку isImage).
-    const DEFAULT_AUDIO_FILTER = "volume=5,highpass=f=400,lowpass=f=2000,acrusher=bits=5:mode=log";
-
     const PRESETS = {
       q_2007: {
-        title: "📱 2007 (классика)",
-        // ИСХОДНЫЙ фильтр из ТЗ: eq=contrast=1.4:brightness=0.15:saturation=1.6,
-        // scale=176:144:flags=neighbor, noise=c0s=30:c1s=40:allf=t — порядок
-        // оптимизирован (scale первым), сами числа не менялись.
-        width: 176, height: 144,
-        vfPostScale: "eq=contrast=1.4:brightness=0.15:saturation=1.6,noise=c0s=30:c1s=40:allf=t",
-        encodeArgs: ["-r", "10", "-c:v", "libx264", "-b:v", "70k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
-                     "-ac", "1", "-ar", "8000", "-c:a", "aac", "-b:a", "16k"]
+        title: "📱 2007",
+        args: ["-vf", "scale=176:144:flags=neighbor,eq=contrast=1.4:brightness=0.15:saturation=1.6,noise=c0s=30:c1s=40:allf=t",
+               "-r", "10", "-c:v", "libx264", "-b:v", "70k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
+               "-ac", "1", "-ar", "8000", "-c:a", "aac", "-b:a", "16k"]
       },
       q_2010: {
         title: "📺 2010",
-        width: 320, height: 240,
-        vfPostScale: "eq=contrast=1.25:brightness=0.1:saturation=1.4,noise=c0s=20:c1s=25:allf=t",
-        encodeArgs: ["-r", "15", "-c:v", "libx264", "-b:v", "150k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
-                     "-ac", "1", "-ar", "8000", "-c:a", "aac", "-b:a", "24k"]
+        args: ["-vf", "scale=320:240:flags=neighbor,eq=contrast=1.25:brightness=0.1:saturation=1.4,noise=c0s=20:c1s=25:allf=t",
+               "-r", "15", "-c:v", "libx264", "-b:v", "150k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
+               "-ac", "1", "-ar", "8000", "-c:a", "aac", "-b:a", "24k"]
       },
       q_2012: {
-        title: "📱 Android S-2012",
-        // Ранние Android (Galaxy S2/S3): вертикальный кадр, сильный пересвет
-        // от солнца/ламп, лёгкий шум. scaleFlags="" → плавное масштабирование
-        // (как на реальном устройстве), без пиксельного nearest-neighbor.
-        width: 360, height: 640,
-        scaleFlags: "",
-        vfPostScale: "eq=contrast=1.3:brightness=0.25:gamma=1.5:saturation=1.4,noise=c0s=10",
-        // Особо жёсткий эффект рации при включённом «сломанном микрофоне».
-        audioFilter: "volume=8,highpass=f=800,lowpass=f=2500,acrusher=bits=4:mode=log",
-        encodeArgs: ["-r", "24", "-c:v", "libx264", "-b:v", "250k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
-                     "-c:a", "aac", "-b:a", "24k"]
+        title: "📱 S-2012",
+        args: ["-vf", "scale=360:640,eq=contrast=1.3:brightness=0.25:gamma=1.5:saturation=1.4,noise=c0s=10",
+               "-r", "24", "-c:v", "libx264", "-b:v", "250k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
+               "-ac", "1", "-ar", "8000", "-c:a", "aac", "-b:a", "24k"]
       },
       q_phonk: {
         title: "🌃 Phonk",
-        // Ночная съёмка машин со вспышкой (JDM / drift-эстетика, как
-        // красная или чёрная Supra). КЛЮЧЕВОЕ — это НЕ блёклость, а
-        // насыщенный дерзкий кадр. Раньше тут было saturation=0.7
-        // (десатурация) + gamma_g (зелёный tint) — это давало блёклый
-        // «больной» кадр вместо Phonk. Теперь:
-        //   eq     — высокий контраст (выбитые тени) + ВЫСОКАЯ насыщенность
-        //            (saturation=1.5), чтобы красный кузов «горел»;
-        //   colorbalance — teal в тенях (gs+bs → холодная ночь/циан) и
-        //            тёплые света (rh → оранжевый, bh=-0.1 давит синеву в
-        //            светах) — классический JDM teal&orange сплит: фон
-        //            холодный, блики фонарей и кузов тёплые;
-        //   noise  — грубое плёночное зерно;
-        //   vignette — тёмные углы, фокус на центре.
-        // scaleFlags="" → плавный ресайз, без пикселизации.
-        width: 480, height: 640,
-        scaleFlags: "",
-        vfPostScale: "eq=contrast=1.5:saturation=1.5:brightness=-0.05,colorbalance=gs=0.05:bs=0.12:rh=0.08:bh=-0.1,noise=c0s=38:allf=t,vignette=PI/4",
-        // Звук — стандартный перегруз/рация (DEFAULT_AUDIO_FILTER).
-        encodeArgs: ["-r", "24", "-c:v", "libx264", "-b:v", "300k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
-                     "-c:a", "aac", "-b:a", "32k"]
+        args: ["-vf", "scale=480:640,eq=contrast=1.2:brightness=0.02:saturation=1.1:gamma_r=1.05:gamma_g=1.1:gamma_b=0.9,unsharp=5:5:0.8,noise=c0s=20:c1s=10:allf=t",
+               "-r", "24", "-c:v", "libx264", "-b:v", "250k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
+               "-ac", "1", "-ar", "8000", "-c:a", "aac", "-b:a", "24k"]
       }
     };
     let currentPreset = "q_2007";
-
-    // ── Переключатель «Пропорции» ─────────────────────────────
-    // squash    → scale=W:H[:flags=neighbor] (старое поведение, сплющивает кадр)
-    // original  → scale=W:H:force_original_aspect_ratio=decrease[:flags=...],
-    //             pad=W:H:(ow-iw)/2:(oh-ih)/2 (сохраняет пропорции, добивает чёрным)
-    // Применяется ОДИНАКОВО к видео и к фото — ветвления нет, строится
-    // одна строка -vf, которую подхватывают оба пути в processBtn.
-    let aspectMode = "squash";
-
-    document.querySelectorAll(".toggle-opt[data-aspect]").forEach(b => {
-      b.addEventListener("click", () => {
-        document.querySelectorAll(".toggle-opt[data-aspect]").forEach(x => x.classList.remove("active"));
-        b.classList.add("active");
-        aspectMode = b.dataset.aspect;
-      });
-    });
-
-    // ── Переключатель «Сломанный микрофон» ────────────────────
-    // on  → добавляем -af с хрипящим аудиофильтром поверх базового -c:a/-b:a.
-    //       Фильтр берётся из пресета (preset.audioFilter) или DEFAULT_AUDIO_FILTER.
-    // off → используем только базовое сжатие звука из пресета, без -af.
-    // Внимание: влияет ТОЛЬКО на видео (у фото нет звуковой дорожки) —
-    // в ветке isImage -af вообще не формируется.
-    let micEffectOn = true;
-
-    document.querySelectorAll(".toggle-opt[data-mic]").forEach(b => {
-      b.addEventListener("click", () => {
-        document.querySelectorAll(".toggle-opt[data-mic]").forEach(x => x.classList.remove("active"));
-        b.classList.add("active");
-        micEffectOn = b.dataset.mic === "on";
-      });
-    });
-
-    // Собирает финальную строку -vf для текущего пресета с учётом aspectMode.
-    // scaleFlags из пресета (по умолчанию "neighbor") управляет алгоритмом:
-    //   neighbor = пиксельный nearest-neighbor, "" = плавный дефолт FFmpeg.
-    function buildVideoFilter(preset) {
-      const { width: W, height: H, vfPostScale } = preset;
-      const flags = preset.scaleFlags === undefined ? "neighbor" : preset.scaleFlags;
-      const flagPart = flags ? `:flags=${flags}` : "";
-      const scalePart = aspectMode === "original"
-        ? `scale=${W}:${H}:force_original_aspect_ratio=decrease${flagPart},pad=${W}:${H}:(ow-iw)/2:(oh-ih)/2`
-        : `scale=${W}:${H}${flagPart}`;
-      return `${scalePart},${vfPostScale}`;
-    }
 
     document.querySelectorAll(".preset").forEach(b => {
       b.addEventListener("click", () => {
@@ -513,297 +222,132 @@
       });
     });
 
-    // ── ffmpeg.wasm ───────────────────────────────────────────
-    // ВАЖНО: не деструктурируем глобалы на этапе загрузки скрипта.
-    // Если CDN ещё не успел отдать/выполнить ffmpeg.js или util.js
-    // (медленная сеть, временный сбой unpkg, кеш WebView и т.п.),
-    // обращение к FFmpegWASM/FFmpegUtil здесь бросает ReferenceError
-    // СРАЗУ при разборе всего <script> — и тогда НИ ОДИН обработчик
-    // в файле не навешивается, включая fileInput "change".
-    // Поэтому проверяем их наличие лениво, внутри ensureFFmpeg().
-    // ВАЖНО: core-файлы (ffmpeg-core.js/.wasm) тоже лежат в vendor/ —
-    // см. константу VENDOR_BASE и комментарий выше про состав папки.
-    //
-    // ffmpeg-core.wasm весит ~31 МБ — это больше лимита GitHub на загрузку
-    // файла через веб-форму (25 МБ). Поэтому сам .wasm разбит на части
-    // (ffmpeg-core.wasm.part00, .part01 — каждая < 25 МБ) и собирается
-    // обратно в браузере через fetch + конкатенацию ArrayBuffer, прежде
-    // чем передать его в ffmpeg.load(). Если понадобится больше частей —
-    // просто добавь их имена в массив WASM_PARTS ниже.
-    const WASM_PARTS = ["ffmpeg-core.wasm.part00", "ffmpeg-core.wasm.part01"];
-
-    async function loadWasmFromParts(basePathIgnored) {
-      const buffers = [];
-      let totalLen = 0;
-      for (const partName of WASM_PARTS) {
-        const url = `${VENDOR_BASE}/${partName}?${ASSET_VERSION}`;
-        const res = await fetch(url);
-        if (!res.ok) {
-          throw new Error(`Не удалось скачать часть wasm-файла: ${url} (HTTP ${res.status})`);
-        }
-        const buf = await res.arrayBuffer();
-        buffers.push(buf);
-        totalLen += buf.byteLength;
-      }
-      // Склеиваем все части в один непрерывный буфер.
-      const merged = new Uint8Array(totalLen);
-      let offset = 0;
-      for (const buf of buffers) {
-        merged.set(new Uint8Array(buf), offset);
-        offset += buf.byteLength;
-      }
-      const blob = new Blob([merged], { type: "application/wasm" });
-      return URL.createObjectURL(blob);
-    }
-
+    const { FFmpeg } = FFmpegWASM;
+    const { toBlobURL, fetchFile } = FFmpegUtil;
     let ffmpeg = null;
     let ffmpegReady = false;
-    let fetchFile = null;
 
     async function ensureFFmpeg() {
       if (ffmpegReady) return ffmpeg;
-
-      setStatus('<span class="spinner"></span>Загружаю движок FFmpeg (~25 МБ, один раз)...');
+      setStatus('<span class="spinner"></span>Загружаю движок (~25 МБ)...');
       processBtn.disabled = true;
-
-      // Ждём результат фоновой загрузки скриптов, начатой при старте страницы.
-      // Если она ещё не завершилась — подождём её здесь; если упала —
-      // пробуем загрузить ещё раз (например, первая попытка совпала с
-      // моментом, когда WebView ещё не успел открыть локальные ресурсы).
-      let lastLoadErr = null;
-      try {
-        await ffmpegLibsLoaded;
-      } catch (_) {
-        setStatus('<span class="spinner"></span>Повторная попытка загрузки движка...');
-        try {
-          await loadScript(`${VENDOR_BASE}/ffmpeg.js?${ASSET_VERSION}`);
-          await loadScript(`${VENDOR_BASE}/ffmpeg-util.js?${ASSET_VERSION}`);
-        } catch (err) {
-          lastLoadErr = err;
-        }
-      }
-
-      if (typeof FFmpegWASM === "undefined" || typeof FFmpegUtil === "undefined") {
-        const reason = lastLoadErr ? lastLoadErr.message : "библиотеки не определены после загрузки";
-        throw new Error(
-          "Не загрузился движок FFmpeg: " + reason + ". " +
-          "Проверь, что папка vendor/ (с файлами ffmpeg.js, 814.ffmpeg.js, " +
-          "ffmpeg-util.js, ffmpeg-core.js, ffmpeg-core.wasm.part00, " +
-          "ffmpeg-core.wasm.part01) загружена на хостинг рядом с index.html. " +
-          "Открывать страницу напрямую с диска (file://) не получится — " +
-          "нужен HTTP(S)-хостинг (например, GitHub Pages)."
-        );
-      }
-      const { FFmpeg } = FFmpegWASM;
-      ({ fetchFile } = FFmpegUtil);
-      const { toBlobURL } = FFmpegUtil;
-
       ffmpeg = new FFmpeg();
-      // Прогресс с этапа загрузки ядра не привязан — используем «log» как индикатор жизни.
       ffmpeg.on("log", ({ message }) => {
-        // Показываем короткие строки лога, чтобы экран «жил».
         if (message && message.length < 60) setStatus("⚙️ " + message);
       });
-
-      let coreURL, wasmURL;
-      try {
-        coreURL = await toBlobURL(`${VENDOR_BASE}/ffmpeg-core.js?${ASSET_VERSION}`, "text/javascript");
-        wasmURL = await loadWasmFromParts(`${VENDOR_BASE}/ffmpeg-core.wasm`);
-      } catch (err) {
-        console.error(err);
-        throw new Error(
-          "Не удалось загрузить ffmpeg-core.js/.wasm из папки vendor/. " +
-          "Проверь, что все файлы (включая .part00/.part01) загружены на хостинг рядом с index.html."
-        );
-      }
-
-
-      await ffmpeg.load({ coreURL, wasmURL });
+      const CORE = "https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd";
+      await ffmpeg.load({
+        coreURL: await toBlobURL(`${CORE}/ffmpeg-core.js`, "text/javascript"),
+        wasmURL: await toBlobURL(`${CORE}/ffmpeg-core.wasm`, "application/wasm")
+      });
       ffmpegReady = true;
       return ffmpeg;
     }
 
-    // ── Выбор файла (галерея ИЛИ камера — одна логика) ────────
     let selectedFile = null;
-    let selectedDuration = 0;
+    let isImage = false;
 
-    // Кнопки выбора файла реализованы как <label for="..."> — это нативный
-    // браузерный механизм, который надёжно открывает системный выбор файла
-    // на iOS/Android внутри Telegram WebView (где программный .click() часто
-    // блокируется). Поэтому тут НЕТ обработчиков клика на самих <label>.
-    // Оба скрытых инпута (fileInput из галереи, cameraInput со съёмкой)
-    // кормят файлы в одну и ту же handleFileSelected.
-
-    function handleFileSelected(e) {
+    const handleFileSelect = (e) => {
       const file = e.target.files && e.target.files[0];
       if (!file) return;
 
-      // Лимит размера
-      const MAX_BYTES = 100 * 1024 * 1024; // 100 МБ
-      if (file.size > MAX_BYTES) {
+      if (file.size > 100 * 1024 * 1024) {
         setStatus("❌ Файл слишком большой (лимит 100 МБ).");
         return;
       }
 
       selectedFile = file;
-      const mbSize = (file.size / (1024 * 1024)).toFixed(1);
-      const icon = file.type.startsWith("image/") ? "🖼️" : "🎬";
-      filenameEl.textContent = icon + " " + file.name + "  ·  " + mbSize + " МБ";
-
+      isImage = file.type.startsWith("image/");
+      const mb = (file.size / (1024 * 1024)).toFixed(1);
+      
+      filenameEl.textContent = (isImage ? "🖼️ " : "🎬 ") + file.name + "  ·  " + mb + " МБ";
       processBtn.disabled = false;
       resultWrap.classList.remove("active");
-      setStatus("Готово к обработке. Жми «Сделать шакально» 🔧");
-    }
+      setStatus("Готово к обработке. Жми кнопку 🔧");
+    };
 
-    fileInput.addEventListener("change", handleFileSelected);
-    cameraInput.addEventListener("change", handleFileSelected);
+    $("fileInput").addEventListener("change", handleFileSelect);
+    $("cameraInput").addEventListener("change", handleFileSelect);
 
-    // ── Обработка ─────────────────────────────────────────────
     processBtn.addEventListener("click", async () => {
       if (!selectedFile) return;
       resultWrap.classList.remove("active");
       progressWrap.classList.add("active");
       setProgress(0);
-      setTitle("ПРЕВРАЩАЮ В ПИКСЕЛИ");
-
-      // Тип исходника определяет ВСЁ дальше: имя выхода (.mp4/.jpg),
-      // набор аргументов FFmpeg и то, какой тег показать в результате.
-      const isImage = selectedFile.type.startsWith("image/");
+      setTitle("ОБРАБОТКА");
 
       try {
         const ff = await ensureFFmpeg();
 
         setStatus("📥 Читаю файл...");
-        const inName = "input" + getExt(selectedFile.name);
+        const ext = /\.([a-z0-9]+)$/i.exec(selectedFile.name);
+        const inName = "input" + (ext ? "." + ext[1].toLowerCase() : (isImage ? ".jpg" : ".mp4"));
         const outName = isImage ? "output.jpg" : "output.mp4";
+        
         await ff.writeFile(inName, await fetchFile(selectedFile));
 
-        // Прогресс привязан к обработке (0..1).
         const progressHandler = ({ progress }) => setProgress(progress);
         ff.on("progress", progressHandler);
 
-        setStatus("⚙️ Кодирую... телефон старается изо всех сил");
+        setStatus("⚙️ Накладываю фильтры...");
 
-        // ── Сборка аргументов FFmpeg ──────────────────────────
-        // -vf собирается динамически через buildVideoFilter() с учётом
-        // переключателя «Пропорции» (squash = старый scale без сохранения
-        // пропорций, original = scale + pad с чёрными полосами) и scaleFlags
-        // из пресета. ЭТА ЖЕ строка -vf применяется и к фото.
-        //
-        // ВИДЕО: -i input + [-vf] + [-af если микрофон вкл] + encodeArgs + output
-        //   -af добавляется только если включён «Сломанный микрофон» — фильтр
-        //   берётся из пресета (audioFilter) или DEFAULT_AUDIO_FILTER.
-        // ФОТО: -i input + [-vf] + -frames:v 1 + output.jpg
-        //   Никаких кодеков звука (-c:a/-af), FPS (-r) или битрейта видео
-        //   (-b:v): у кадра нет потока и битрейта, JPEG кодируется дефолтным
-        //   энкодером. Только видеофильтр + ровно один кадр на выход.
-        const preset = PRESETS[currentPreset];
-        const vfArgs = ["-vf", buildVideoFilter(preset)];
-
-        let args;
+        let args = ["-i", inName];
+        const presetArgs = PRESETS[currentPreset].args;
+        
         if (isImage) {
-          args = ["-i", inName].concat(vfArgs).concat(["-frames:v", "1", outName]);
+          // Ищем видеофильтр в пресете
+          const vfIndex = presetArgs.indexOf("-vf");
+          const vfString = vfIndex !== -1 ? presetArgs[vfIndex + 1] : "";
+          args.push("-vf", vfString, "-frames:v", "1");
         } else {
-          const afArgs = micEffectOn ? ["-af", preset.audioFilter || DEFAULT_AUDIO_FILTER] : [];
-          args = ["-i", inName]
-            .concat(vfArgs)
-            .concat(afArgs)
-            .concat(preset.encodeArgs)
-            .concat([outName]);
+          args = args.concat(presetArgs);
         }
-        console.log("FFmpeg args:", args.join(" "));
+        
+        args.push(outName);
         await ff.exec(args);
 
         ff.off("progress", progressHandler);
         setProgress(1);
 
-        setStatus("📦 Читаю результат...");
+        setStatus("📦 Сохраняю...");
         const data = await ff.readFile(outName);
 
-        // Чистим память wasm.
         try { await ff.deleteFile(inName); await ff.deleteFile(outName); } catch (_) {}
 
         const mime = isImage ? "image/jpeg" : "video/mp4";
         const blob = new Blob([data.buffer], { type: mime });
         const blobUrl = URL.createObjectURL(blob);
-
-        showResultMedia(isImage, blobUrl);
+        
+        if (isImage) {
+          resultVideo.style.display = "none";
+          resultVideo.src = "";
+          resultImage.style.display = "block";
+          resultImage.src = blobUrl;
+        } else {
+          resultImage.style.display = "none";
+          resultImage.src = "";
+          resultVideo.style.display = "block";
+          resultVideo.src = blobUrl;
+        }
+        
         resultWrap.classList.add("active");
-        applyResultOrientation(isImage);
-        setTitle("✓ ГОТОВО");
-        setStatus("📱 " + PRESETS[currentPreset].title + " — готов! Сохрани или отправь.");
+        setTitle("ГОТОВО");
+        setStatus((isImage ? "🖼️ " : "📱 ") + PRESETS[currentPreset].title + " — готово!");
 
-        // Прокрутка к результату.
         resultWrap.scrollIntoView({ behavior: "smooth", block: "nearest" });
 
-        // Запоминаем blob для кнопок скачивания/шаринга. Тип (.mp4/.jpg)
-        // выводим из lastBlob.type в самих кнопках — отдельный флаг не нужен.
         lastBlob = blob;
-        lastFileName = "shkal_" + Date.now() + (isImage ? ".jpg" : ".mp4");
+        lastFileName = isImage ? "shkal_" + Date.now() + ".jpg" : "shkal_" + Date.now() + ".mp4";
       } catch (err) {
         console.error(err);
-        setStatus("❌ Ошибка обработки: " + (err && err.message ? err.message : err));
+        setStatus("❌ Ошибка: " + (err && err.message ? err.message : err));
         setTitle("ОШИБКА");
       } finally {
         processBtn.disabled = false;
       }
     });
 
-    function getExt(name) {
-      const m = /\.([a-z0-9]{2,4})$/i.exec(name);
-      return m ? "." + m[1].toLowerCase() : ".mp4";
-    }
-
-    // Показывает нужный медиа-тег в блоке результата и прячет второй.
-    // isImage=true → <img>, иначе <video>. Второй тег зачищается
-    // (убираем src + прячем), чтобы он не висел невидимым «грузилом».
-    function showResultMedia(isImage, blobUrl) {
-      if (isImage) {
-        resultVideo.pause && resultVideo.pause();
-        resultVideo.removeAttribute("src");
-        resultVideo.style.display = "none";
-        resultImage.src = blobUrl;
-        resultImage.style.display = "block";
-      } else {
-        resultImage.removeAttribute("src");
-        resultImage.style.display = "none";
-        resultVideo.style.display = "";
-        resultVideo.src = blobUrl;
-      }
-    }
-
-    // Переключает портретный режим превью по реальной геометрии готового
-    // файла (а не по пресету) — это источник истины: сработает для любого
-    // пресета, режима «Пропорции» и для обоих типов (видео/фото). Класс
-    // .portrait делает медиа узким и высоким, по центру — без чёрных полос
-    // по бокам и без растягивания.
-    function applyResultOrientation(isImage) {
-      const mediaEl = isImage ? resultImage : resultVideo;
-      mediaEl.classList.remove("portrait");
-      const apply = () => {
-        const w = isImage ? resultImage.naturalWidth : resultVideo.videoWidth;
-        const h = isImage ? resultImage.naturalHeight : resultVideo.videoHeight;
-        if (h > w) mediaEl.classList.add("portrait");
-      };
-      // Метаданные уже могут быть загружены — тогда размеры доступны сразу;
-      // иначе ждём событие (load для <img>, loadedmetadata для <video>).
-      if (isImage) {
-        if (resultImage.naturalWidth && resultImage.naturalHeight) {
-          apply();
-        } else {
-          resultImage.addEventListener("load", apply, { once: true });
-        }
-      } else {
-        if (resultVideo.videoWidth && resultVideo.videoHeight) {
-          apply();
-        } else {
-          resultVideo.addEventListener("loadedmetadata", apply, { once: true });
-        }
-      }
-    }
-
-    // ── Скачать / поделиться / ещё раз ────────────────────────
-    let lastBlob = null, lastFileName = "shkal.mp4";
+    let lastBlob = null, lastFileName = "";
 
     downloadBtn.addEventListener("click", () => {
       if (!lastBlob) return;
@@ -817,65 +361,33 @@
 
     shareBtn.addEventListener("click", async () => {
       if (!lastBlob) return;
-      // Тип файла (image/jpeg или video/mp4) берём прямо из блоба — так
-      // шаринг корректно отдаёт .jpg для фото и .mp4 для видео.
-      const mime = lastBlob.type || "video/mp4";
-      const file = new File([lastBlob], lastFileName, { type: mime });
-
-      // Web Share API с файлами — открывает системную панель "Поделиться"
-      // (на Android/iOS там может быть и Telegram). ВАЖНО: внутри Telegram
-      // WebView эта функция почти всегда недоступна или не поддерживает
-      // файлы — это ограничение платформы, не баг. Прямой отправки файла
-      // из Mini App в чат бота вообще не существует в Telegram API:
-      // tg.sendData() передаёт только текст до 4096 байт, файлы через
-      // него отправить нельзя физически.
-      const canUseWebShare = !!(navigator.canShare && navigator.canShare({ files: [file] }));
-      console.log("Web Share с файлами доступен:", canUseWebShare);
-
-      if (canUseWebShare) {
+      const file = new File([lastBlob], lastFileName, { type: lastBlob.type });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
         try {
-          await navigator.share({ files: [file], title: "Шакал 2007", text: "📱 2007 позвонил..." });
-          return; // пользователь успешно поделился (или закрыл панель)
+          await navigator.share({ files: [file], title: "Шакал", text: "Стиль: " + PRESETS[currentPreset].title });
+          return;
         } catch (e) {
-          console.warn("navigator.share упал:", e && e.name, e && e.message);
-          if (e && e.name === "AbortError") return; // сам отменил выбор — не считаем ошибкой
-          // Любая другая ошибка — едем дальше на запасной вариант ниже.
+          if (e && e.name === "AbortError") return; 
         }
       }
-
-      // Запасной и единственный надёжный вариант: скачать файл, затем
-      // прикрепить его в Telegram вручную (1-2 нажатия пользователем).
-      setTitle("💾 Сохранено");
-      setStatus(
-        "Telegram не даёт Mini App отправлять файлы напрямую в чат — это его " +
-        "ограничение, не ошибка приложения. Файл сохранён в «Загрузки» 👇 " +
-        "Открой Telegram → выбери чат → 📎 → Файл, и прикрепи его оттуда."
-      );
+      setStatus("📤 Нажми «Скачать», затем отправь файл в чат вручную.");
       downloadBtn.click();
     });
-
 
     againBtn.addEventListener("click", () => {
       resultWrap.classList.remove("active");
       progressWrap.classList.remove("active");
       setProgress(0);
-      setTitle("ВЕРНИСЬ В 2007-Й");
-      setStatus("Выбери новое фото или видео");
+      setTitle("ВЫБЕРИ СТИЛЬ");
+      setStatus("Загрузи фото или видео для обработки");
       selectedFile = null;
-      fileInput.value = "";
-      cameraInput.value = "";
+      isImage = false;
+      $("fileInput").value = "";
+      $("cameraInput").value = "";
       filenameEl.textContent = "—";
       processBtn.disabled = true;
-      // Сбрасываем оба тега результата и портретный режим, чтобы они
-      // не остались от прошлого файла.
-      resultVideo.classList.remove("portrait");
-      resultImage.classList.remove("portrait");
-      resultVideo.removeAttribute("src");
-      resultImage.removeAttribute("src");
-      resultVideo.style.display = "";
-      resultImage.style.display = "none";
-      lastBlob = null;
     });
+
   })();
   </script>
 </body>
