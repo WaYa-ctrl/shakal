@@ -140,13 +140,7 @@
     .result-actions .btn { margin-top: 0; }
 
     .warn { font-size: 10px; color: #ffb380; text-align:center; margin-top: 12px; line-height: 1.4;}
-    .hidden-input {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  opacity: 0;
-  z-index: -1;
-}
+    .hidden-input { display: none; }
     .spinner { display:inline-block; width:12px; height:12px; border:2px solid rgba(255,255,255,.3); border-top-color:#fff; border-radius:50%; animation: spin .7s linear infinite; vertical-align: middle; margin-right:6px;}
     @keyframes spin { to { transform: rotate(360deg); } }
   </style>
@@ -302,35 +296,24 @@
     // на iOS/Android внутри Telegram WebView (где программный .click() часто
     // блокируется). Поэтому тут НЕТ обработчика клика на pickBtn.
 
-    fileInput.addEventListener("change", async (e) => {
+    fileInput.addEventListener("change", (e) => {
       const file = e.target.files && e.target.files[0];
       if (!file) return;
 
-      // Лимит размера (память телефона / браузера).
+      // Лимит размера
       const MAX_BYTES = 100 * 1024 * 1024; // 100 МБ
       if (file.size > MAX_BYTES) {
         setStatus("❌ Файл слишком большой (лимит 100 МБ).");
         return;
       }
 
-      // Длительность через <video> metadata.
-      const url = URL.createObjectURL(file);
-      const v = document.createElement("video");
-      v.preload = "metadata";
-      v.src = url;
-      v.onloadedmetadata = () => {
-        selectedDuration = v.duration;
-        URL.revokeObjectURL(url);
-        selectedFile = file;
-        filenameEl.textContent = "🎬 " + file.name + "  ·  " + file.size + " байт  ·  " + Math.round(v.duration) + " сек";
-        processBtn.disabled = false;
-        resultWrap.classList.remove("active");
-        setStatus("Готово к обработке. Жми «Сделать шакально» 🔧");
-      };
-      v.onerror = () => {
-        URL.revokeObjectURL(url);
-        setStatus("❌ Не удалось прочитать видео. Попробуй другой файл.");
-      };
+      selectedFile = file;
+      const mbSize = (file.size / (1024 * 1024)).toFixed(1);
+      filenameEl.textContent = "🎬 " + file.name + "  ·  " + mbSize + " МБ";
+      
+      processBtn.disabled = false;
+      resultWrap.classList.remove("active");
+      setStatus("Готово к обработке. Жми «Сделать шакально» 🔧");
     });
 
     // ── Обработка ─────────────────────────────────────────────
