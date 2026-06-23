@@ -192,59 +192,79 @@
     </div>
   </div>
 
-  <!-- ffmpeg.wasm и util грузятся динамически из JS (см. ниже, loadScriptWithFallback) —
-       это даёт fallback-CDN и понятную ошибку, если основной CDN недоступен
-       в Telegram WebView (так бывает на некоторых устройствах/сетях). -->
+  <!-- ffmpeg.wasm и util грузятся динамически из JS со своего хостинга
+       (папка vendor/, см. ниже VENDOR_BASE) — без сторонних CDN. -->
 
   <script>
   (function () {
     "use strict";
 
-    // ── Динамическая загрузка ffmpeg.wasm с fallback-CDN ──────
-    // Грузим скрипты через JS (а не статичные <script src>), чтобы:
-    //  1) иметь возможность переключиться на запасной CDN, если основной
-    //     недоступен в конкретном Telegram WebView/сети;
-    //  2) явно знать момент, когда библиотеки точно готовы, а не гадать.
-    function loadScript(url) {
+    // ── Загрузка ffmpeg.wasm со своего хостинга (НЕ с CDN) ────
+    // ВАЖНО: unpkg.com и cdn.jsdelivr.net недоступны из РФ (блокировка
+    // на уровне провайдера), поэтому раньше тут была CDN-логика с
+    // fallback — она не помогала, потому что блокировка не зависит от
+    // конкретного CDN-домена. Решение: файлы ffmpeg.wasm лежат рядом с
+    // index.html (папка vendor/) и грузятся с того же хоста, что и сама
+    // страница — никакого стороннего CDN не остаётся в цепочке.
+    //
+    // Состав папки vendor/ (должна лежать рядом с этим index.html):
+    //   vendor/ffmpeg.js          — из @ffmpeg/ffmpeg, dist/umd/ffmpeg.js
+    //   vendor/814.ffmpeg.js      — ОБЯЗАТЕЛЬНО рядом! это чанк-файл,
+    //                               который ffmpeg.js подгружает сам
+    //                               (webpack разбил UMD-сборку на 2 файла)
+    //   vendor/ffmpeg-util.js     — из @ffmpeg/util, dist/umd/index.js
+    //   vendor/ffmpeg-core.js     — из @ffmpeg/core, dist/umd/ffmpeg-core.js
+    //   vendor/ffmpeg-core.wasm   — из @ffmpeg/core, dist/umd/ffmpeg-core.wasm
+    const VENDOR_BASE = "vendor"; // относительный путь от index.html
+
+    function loadScript(url, timeoutMs = 20000) {
       return new Promise((resolve, reject) => {
         const s = document.createElement("script");
+        let done = false;
+        const timer = setTimeout(() => {
+          if (done) return;
+          done = true;
+          s.remove();
+          reject(new Error("Таймаут (" + (timeoutMs / 1000) + "с): " + url));
+        }, timeoutMs);
         s.src = url;
-        s.onload = () => resolve(url);
-        s.onerror = () => reject(new Error("Не удалось загрузить: " + url));
+        s.onload = () => {
+          if (done) return;
+          done = true;
+          clearTimeout(timer);
+          resolve(url);
+        };
+        s.onerror = () => {
+          if (done) return;
+          done = true;
+          clearTimeout(timer);
+          reject(new Error("Файл не найден: " + url + " (проверь, что папка vendor/ загружена на хостинг рядом с index.html)"));
+        };
         document.head.appendChild(s);
       });
     }
 
-    async function loadScriptWithFallback(urls) {
-      let lastErr = null;
-      for (const url of urls) {
-        try {
-          await loadScript(url);
-          return url;
-        } catch (err) {
-          lastErr = err;
-          console.warn("CDN не сработал, пробую следующий:", url, err);
-        }
-      }
-      throw lastErr || new Error("Все CDN недоступны");
-    }
-
     // Промис, который резолвится, когда обе библиотеки точно в window.
     const ffmpegLibsLoaded = (async () => {
-      await loadScriptWithFallback([
-        "https://unpkg.com/@ffmpeg/ffmpeg@0.12.10/dist/umd/ffmpeg.js",
-        "https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/umd/ffmpeg.js",
-      ]);
-      await loadScriptWithFallback([
-        "https://unpkg.com/@ffmpeg/util@0.12.10/dist/umd/index.js",
-        "https://cdn.jsdelivr.net/npm/@ffmpeg/util@0.12.10/dist/umd/index.js",
-      ]);
+      setStatusSafe('<span class="spinner"></span>Загружаю ffmpeg.js...');
+      await loadScript(`${VENDOR_BASE}/ffmpeg.js`);
+      setStatusSafe('<span class="spinner"></span>Загружаю util.js...');
+      await loadScript(`${VENDOR_BASE}/ffmpeg-util.js`);
     })();
     ffmpegLibsLoaded.catch((err) => {
       console.error("Не удалось загрузить библиотеки ffmpeg.wasm:", err);
       // Не показываем ошибку сразу на экране — попробуем ещё раз
       // лениво при нажатии «Сделать шакально» (см. ensureFFmpeg).
     });
+
+    // setStatus определена ниже после DOM-привязок; на случай если этот
+    // код выполнится раньше — безопасная обёртка без падения.
+    function setStatusSafe(html) {
+      const el = document.getElementById("lcdStatus");
+      if (el) el.innerHTML = html;
+    }
+
+
 
     // ── Telegram WebApp ───────────────────────────────────────
     const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
@@ -333,12 +353,8 @@
     // СРАЗУ при разборе всего <script> — и тогда НИ ОДИН обработчик
     // в файле не навешивается, включая fileInput "change".
     // Поэтому проверяем их наличие лениво, внутри ensureFFmpeg().
-    // ВАЖНО: версия @ffmpeg/core ОТЛИЧАЕТСЯ от версии @ffmpeg/ffmpeg — это
-    // нормально и намеренно. У @ffmpeg/core начиная с некоторых версий
-    // вообще нет сборки dist/umd (только dist/esm), а нам для обычного
-    // <script src> нужен именно UMD. 0.12.6 — последняя версия core,
-    // у которой есть полноценная папка dist/umd. Если её заменить на
-    // 0.12.10/dist/umd — получите 404, потому что такого пути не существует.
+    // ВАЖНО: core-файлы (ffmpeg-core.js/.wasm) тоже лежат в vendor/ —
+    // см. константу VENDOR_BASE и комментарий выше про состав папки.
     let ffmpeg = null;
     let ffmpegReady = false;
     let fetchFile = null;
@@ -350,27 +366,29 @@
       processBtn.disabled = true;
 
       // Ждём результат фоновой загрузки скриптов, начатой при старте страницы.
-      // Если она ещё не завершилась — подождём её здесь; если упала на обоих
-      // CDN — пробуем загрузить ещё раз (например, если первая попытка
-      // совпала с моментом, когда WebView ещё не успел открыть сеть).
+      // Если она ещё не завершилась — подождём её здесь; если упала —
+      // пробуем загрузить ещё раз (например, первая попытка совпала с
+      // моментом, когда WebView ещё не успел открыть локальные ресурсы).
+      let lastLoadErr = null;
       try {
         await ffmpegLibsLoaded;
       } catch (_) {
         setStatus('<span class="spinner"></span>Повторная попытка загрузки движка...');
-        await loadScriptWithFallback([
-          "https://unpkg.com/@ffmpeg/ffmpeg@0.12.10/dist/umd/ffmpeg.js",
-          "https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/umd/ffmpeg.js",
-        ]);
-        await loadScriptWithFallback([
-          "https://unpkg.com/@ffmpeg/util@0.12.10/dist/umd/index.js",
-          "https://cdn.jsdelivr.net/npm/@ffmpeg/util@0.12.10/dist/umd/index.js",
-        ]);
+        try {
+          await loadScript(`${VENDOR_BASE}/ffmpeg.js`);
+          await loadScript(`${VENDOR_BASE}/ffmpeg-util.js`);
+        } catch (err) {
+          lastLoadErr = err;
+        }
       }
 
       if (typeof FFmpegWASM === "undefined" || typeof FFmpegUtil === "undefined") {
+        const reason = lastLoadErr ? lastLoadErr.message : "библиотеки не определены после загрузки";
         throw new Error(
-          "Не загрузился движок FFmpeg ни с одного CDN. " +
-          "Проверь интернет-соединение и попробуй ещё раз."
+          "Не загрузился движок FFmpeg: " + reason + ". " +
+          "Проверь, что папка vendor/ (с файлами ffmpeg.js, 814.ffmpeg.js, " +
+          "ffmpeg-util.js, ffmpeg-core.js, ffmpeg-core.wasm) загружена на " +
+          "хостинг рядом с index.html."
         );
       }
       const { FFmpeg } = FFmpegWASM;
@@ -384,26 +402,16 @@
         if (message && message.length < 60) setStatus("⚙️ " + message);
       });
 
-      // Core-файлы (ffmpeg-core.js/.wasm) тоже грузим с fallback-CDN —
-      // та же причина: unpkg иногда недоступен из конкретного WebView.
-      const CORE_BASES = [
-        "https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd",
-        "https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/umd",
-      ];
       let coreURL, wasmURL;
-      let coreErr = null;
-      for (const base of CORE_BASES) {
-        try {
-          coreURL = await toBlobURL(`${base}/ffmpeg-core.js`, "text/javascript");
-          wasmURL = await toBlobURL(`${base}/ffmpeg-core.wasm`, "application/wasm");
-          coreErr = null;
-          break;
-        } catch (err) {
-          coreErr = err;
-          console.warn("Core CDN не сработал, пробую следующий:", base, err);
-        }
+      try {
+        coreURL = await toBlobURL(`${VENDOR_BASE}/ffmpeg-core.js`, "text/javascript");
+        wasmURL = await toBlobURL(`${VENDOR_BASE}/ffmpeg-core.wasm`, "application/wasm");
+      } catch (err) {
+        throw new Error(
+          "Не удалось загрузить ffmpeg-core.js/.wasm из папки vendor/. " +
+          "Проверь, что эти файлы загружены на хостинг рядом с index.html."
+        );
       }
-      if (coreErr) throw new Error("Не удалось загрузить ffmpeg-core ни с одного CDN.");
 
       await ffmpeg.load({ coreURL, wasmURL });
       ffmpegReady = true;
