@@ -118,7 +118,8 @@
     .btn + .btn { margin-top: 10px; }
 
     /* ── Пресеты качества ────────────────────────────────────── */
-    .presets { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 14px; }
+    /* auto-fit: на телефоне ~3 в ряд (3+2), на узком экране ~2 в ряд (2+2+1). */
+    .presets { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 8px; margin-bottom: 14px; }
     .preset {
       border: 2px solid #3a4654; background: #1a232c; color: #9fb2c4;
       font-family: inherit; font-size: 11px; font-weight: bold;
@@ -158,6 +159,17 @@
       width: 100%; border-radius: 10px; border: 3px solid #4a5664; background:#000;
       box-shadow: inset 0 0 20px rgba(0,0,0,.7);
     }
+    /* Портретный режим превью для вертикальных пресетов (CX70, S-2012):
+       видео узкое/высокое и по центру, без чёрных полос по бокам и без
+       растягивания на всю ширину корпуса. Класс вешается из JS (см.
+       applyResultOrientation) по признаку height > width. */
+    .result-video.portrait {
+      width: auto;
+      max-width: 100%;
+      max-height: 58vh;
+      margin: 0 auto;
+      display: block;
+    }
     .result-actions { display:grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
     .result-actions .btn { margin-top: 0; }
 
@@ -186,11 +198,13 @@
       </div>
     </div>
 
-    <!-- Пресеты качества -->
+    <!-- Пресеты качества (порядок — по эпохам) -->
     <div class="presets">
-      <button class="preset active" data-preset="q_2007">📱 2007<small>176×144</small></button>
       <button class="preset" data-preset="q_brick">📟 BRICK<small>128×96</small></button>
+      <button class="preset" data-preset="q_cx70">📟 CX70<small>240×320</small></button>
+      <button class="preset active" data-preset="q_2007">📱 2007<small>176×144</small></button>
       <button class="preset" data-preset="q_2010">📺 2010<small>320×240</small></button>
+      <button class="preset" data-preset="q_2012">📱 S-2012<small>360×640</small></button>
     </div>
 
     <div class="filename" id="filename">—</div>
@@ -299,29 +313,12 @@
       await loadScript(`${VENDOR_BASE}/ffmpeg.js?${ASSET_VERSION}`);
       setStatusSafe('<span class="spinner"></span>Загружаю util.js...');
       await loadScript(`${VENDOR_BASE}/ffmpeg-util.js?${ASSET_VERSION}`);
-      resetStatusIfIdle();
     })();
     ffmpegLibsLoaded.catch((err) => {
       console.error("Не удалось загрузить библиотеки ffmpeg.wasm:", err);
       // Не показываем ошибку сразу на экране — попробуем ещё раз
       // лениво при нажатии «Сделать шакально» (см. ensureFFmpeg).
-      // Но и спиннер вечно висеть не должен — вернём дефолтный текст,
-      // настоящая ошибка (если CDN/файлы реально недоступны) всплывёт
-      // при нажатии кнопки через ensureFFmpeg.
-      resetStatusIfIdle();
     });
-
-    // Возвращает статус-текст к исходному после фоновой загрузки библиотек —
-    // но ТОЛЬКО если пользователь за это время ничего не сделал (иначе
-    // затёрли бы более актуальный статус, например "Готово к обработке").
-    // typeof-проверка нужна на случай, если этот код выполнится раньше,
-    // чем ниже по файлу объявится `let selectedFile` (минимальный риск,
-    // но безопаснее перестраховаться).
-    function resetStatusIfIdle() {
-      if (typeof selectedFile === "undefined" || !selectedFile) {
-        setStatusSafe("Выбери видео и верни его в эпоху пикселей");
-      }
-    }
 
     // setStatus определена ниже после DOM-привязок; на случай если этот
     // код выполнится раньше — безопасная обёртка без падения.
@@ -377,14 +374,22 @@
       progressPct.textContent = pct + "%";
     }
 
-    // ── Пресеты (значения = те, что в Python-боте) ────────────
-    // Порядок фильтров оптимизирован: scale → eq → noise (на крошечном кадре — быстро).
-    // ВАЖНО: здесь хранятся только БАЗОВЫЕ данные пресета — ширина/высота
-    // для scale и видеофильтр ПОСЛЕ scale (eq/noise), а также параметры
-    // кодирования без -vf и без -af. Сама строка -vf (с учётом переключателя
-    // "Пропорции") и аргумент -af (с учётом переключателя "Сломанный
-    // микрофон") собираются динамически в processBtn.addEventListener,
-    // см. buildVideoFilter() и AUDIO_FILTER ниже.
+    // ── Пресеты ───────────────────────────────────────────────
+    // Порядок фильтров: scale → eq → noise (на крошечном кадре — быстро).
+    // Здесь хранятся ТОЛЬКО БАЗОВЫЕ данные пресета:
+    //   width/height  — целевое разрешение для scale;
+    //   scaleFlags    — алгоритм масштабирования (опц.):
+    //                   "neighbor" (по умолч.) = пиксельный nearest-neighbor,
+    //                   "" = дефолт FFmpeg (плавнее, для Android-эпохи);
+    //   vfPostScale   — видеофильтр ПОСЛЕ scale (eq/noise), без самого scale;
+    //   audioFilter   — особый аудиофильтр для «сломанного микрофона»
+    //                   (опц.; если нет — берётся DEFAULT_AUDIO_FILTER);
+    //   encodeArgs    — параметры кодирования БЕЗ -vf и -af.
+    // Сама строка -vf (с учётом переключателя «Пропорции») и аргумент -af
+    // (с учётом переключателя «Сломанный микрофон») собираются динамически
+    // в processBtn — см. buildVideoFilter() и DEFAULT_AUDIO_FILTER.
+    const DEFAULT_AUDIO_FILTER = "volume=5,highpass=f=400,lowpass=f=2000,acrusher=bits=5:mode=log";
+
     const PRESETS = {
       q_brick: {
         title: "📟 Brick 2003",
@@ -392,6 +397,16 @@
         vfPostScale: "eq=contrast=1.5:brightness=0.15:saturation=1.7,noise=c0s=45:c1s=55:allf=t",
         encodeArgs: ["-r", "8", "-c:v", "libx264", "-b:v", "40k", "-preset", "ultrafast", "-pix_fmt", "yuv420p",
                      "-ac", "1", "-ar", "8000", "-c:a", "aac", "-b:a", "12k"]
+      },
+      q_cx70: {
+        title: "📟 Siemens CX70 2004",
+        width: 240, height: 320,
+        // Пурпурная CMOS-матрица + клиппинг белого. scaleFlags по умолч.
+        // = neighbor (пиксельная CRT-CMOS-картинка).
+        vfPostScale: "eq=contrast=1.4:brightness=0.2:saturation=0.5:gamma_r=1.2:gamma_b=1.1,noise=c0s=15:allf=t",
+        // Звук микрофона — стандартный (DEFAULT_AUDIO_FILTER), без audioFilter.
+        encodeArgs: ["-r", "8", "-c:v", "libx264", "-b:v", "50k", "-preset", "ultrafast", "-pix_fmt", "yuv420p",
+                     "-c:a", "aac", "-b:a", "12k"]
       },
       q_2007: {
         title: "📱 2007 (классика)",
@@ -409,13 +424,26 @@
         vfPostScale: "eq=contrast=1.25:brightness=0.1:saturation=1.4,noise=c0s=20:c1s=25:allf=t",
         encodeArgs: ["-r", "15", "-c:v", "libx264", "-b:v", "150k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
                      "-ac", "1", "-ar", "8000", "-c:a", "aac", "-b:a", "24k"]
+      },
+      q_2012: {
+        title: "📱 Android S-2012",
+        // Ранние Android (Galaxy S2/S3): вертикальный кадр, сильный пересвет
+        // от солнца/ламп, лёгкий шум. scaleFlags="" → плавное масштабирование
+        // (как на реальном устройстве), без пиксельного nearest-neighbor.
+        width: 360, height: 640,
+        scaleFlags: "",
+        vfPostScale: "eq=contrast=1.3:brightness=0.25:gamma=1.5:saturation=1.4,noise=c0s=10",
+        // Особо жёсткий эффект рации при включённом «сломанном микрофоне».
+        audioFilter: "volume=8,highpass=f=800,lowpass=f=2500,acrusher=bits=4:mode=log",
+        encodeArgs: ["-r", "24", "-c:v", "libx264", "-b:v", "250k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
+                     "-c:a", "aac", "-b:a", "24k"]
       }
     };
     let currentPreset = "q_2007";
 
     // ── Переключатель «Пропорции» ─────────────────────────────
-    // squash    → scale=W:H:flags=neighbor (старое поведение, сплющивает кадр)
-    // original  → scale=W:H:force_original_aspect_ratio=decrease:flags=neighbor,
+    // squash    → scale=W:H[:flags=neighbor] (старое поведение, сплющивает кадр)
+    // original  → scale=W:H:force_original_aspect_ratio=decrease[:flags=...],
     //             pad=W:H:(ow-iw)/2:(oh-ih)/2 (сохраняет пропорции, добивает чёрным)
     let aspectMode = "squash";
 
@@ -429,9 +457,9 @@
 
     // ── Переключатель «Сломанный микрофон» ────────────────────
     // on  → добавляем -af с хрипящим аудиофильтром поверх базового -c:a/-b:a.
+    //       Фильтр берётся из пресета (preset.audioFilter) или DEFAULT_AUDIO_FILTER.
     // off → используем только базовое сжатие звука из пресета, без -af.
     let micEffectOn = true;
-    const AUDIO_FILTER = "volume=8,highpass=f=700,lowpass=f=1500,acrusher=bits=2:mode=log";
 
     document.querySelectorAll(".toggle-opt[data-mic]").forEach(b => {
       b.addEventListener("click", () => {
@@ -442,50 +470,16 @@
     });
 
     // Собирает финальную строку -vf для текущего пресета с учётом aspectMode.
-    // Если swapDimensions=true (видео портретное и aspectMode=original),
-    // меняем местами W/H пресета — итоговый кадр становится вертикальным,
-    // чтобы портретное видео не сжималось в узкую полоску с огромными
-    // чёрными полями по бокам, а сохраняло заметный размер.
-    function buildVideoFilter(preset, swapDimensions) {
-      let { width: W, height: H, vfPostScale } = preset;
-      if (aspectMode === "original" && swapDimensions) {
-        [W, H] = [H, W];
-      }
+    // scaleFlags из пресета (по умолчанию "neighbor") управляет алгоритмом:
+    //   neighbor = пиксельный nearest-neighbor, "" = плавный дефолт FFmpeg.
+    function buildVideoFilter(preset) {
+      const { width: W, height: H, vfPostScale } = preset;
+      const flags = preset.scaleFlags === undefined ? "neighbor" : preset.scaleFlags;
+      const flagPart = flags ? `:flags=${flags}` : "";
       const scalePart = aspectMode === "original"
-        ? `scale=${W}:${H}:force_original_aspect_ratio=decrease:flags=neighbor,pad=${W}:${H}:(ow-iw)/2:(oh-ih)/2`
-        : `scale=${W}:${H}:flags=neighbor`;
+        ? `scale=${W}:${H}:force_original_aspect_ratio=decrease${flagPart},pad=${W}:${H}:(ow-iw)/2:(oh-ih)/2`
+        : `scale=${W}:${H}${flagPart}`;
       return `${scalePart},${vfPostScale}`;
-    }
-
-    // Определяет, является ли видео портретным (после применения autorotate
-    // по displaymatrix-метаданным), декодируя один кадр в PNG через сам
-    // ffmpeg.wasm и читая реальные ширину/высоту результата. Это надёжнее,
-    // чем доверять "сырым" width/height входного файла, потому что они не
-    // учитывают поворот, заданный метаданными (типичная ситуация для видео
-    // со смартфона, снятого в портретной ориентации).
-    async function isPortraitVideo(ff, inName) {
-      const probeName = "probe_" + Date.now() + ".png";
-      try {
-        await ff.exec(["-i", inName, "-frames:v", "1", "-update", "1", probeName]);
-        const data = await ff.readFile(probeName);
-        const { width, height } = readPngDimensions(data);
-        try { await ff.deleteFile(probeName); } catch (_) {}
-        if (width && height) return height > width;
-      } catch (err) {
-        console.warn("Не удалось определить ориентацию видео, считаем горизонтальным:", err);
-      }
-      return false;
-    }
-
-    // Читает ширину/высоту PNG прямо из заголовка файла (IHDR-чанк),
-    // без декодирования всего изображения — быстро и не требует Canvas.
-    function readPngDimensions(bytes) {
-      // PNG: 8 байт сигнатуры, затем чанк IHDR с длиной(4)+тип(4)+данные.
-      // Width = байты [16..20), Height = байты [20..24), big-endian.
-      if (!bytes || bytes.length < 24) return {};
-      const width = (bytes[16] << 24) | (bytes[17] << 16) | (bytes[18] << 8) | bytes[19];
-      const height = (bytes[20] << 24) | (bytes[21] << 16) | (bytes[22] << 8) | bytes[23];
-      return { width: width >>> 0, height: height >>> 0 };
     }
 
     document.querySelectorAll(".preset").forEach(b => {
@@ -651,16 +645,6 @@
         const outName = "output.mp4";
         await ff.writeFile(inName, await fetchFile(selectedFile));
 
-        // Для режима "original" дополнительно проверяем ориентацию видео
-        // (см. isPortraitVideo выше) — это нужно сделать ДО подписки на
-        // событие "progress" ниже, чтобы пробное извлечение одного кадра
-        // не дёргало прогресс-бар до начала настоящей обработки.
-        let isPortrait = false;
-        if (aspectMode === "original") {
-          setStatus("🔎 Определяю ориентацию видео...");
-          isPortrait = await isPortraitVideo(ff, inName);
-        }
-
         // Прогресс привязан к обработке (0..1).
         const progressHandler = ({ progress }) => setProgress(progress);
         ff.on("progress", progressHandler);
@@ -668,19 +652,16 @@
         setStatus("⚙️ Кодирую... телефон старается изо всех сил");
 
         // Сборка аргументов: -i input + [-vf ...] + [-af ...] + кодирование + output.
-        // -vf собирается динамически с учётом переключателя "Пропорции"
-        // (squash = старый scale без сохранения пропорций, original = scale
-        // + pad с чёрными полосами). -af добавляется только если включён
-        // переключатель "Сломанный микрофон" — иначе звук идёт через
-        // базовое сжатие из пресета (-c:a/-b:a), без доп. фильтра.
-        //
-        // isPortrait (определён выше): если видео портретное, меняем
-        // местами W/H пресета, чтобы итоговый кадр тоже был вертикальным —
-        // иначе портретное видео сжималось бы в узкую полоску с огромными
-        // чёрными полями по бокам внутри горизонтального кадра пресета.
+        // -vf собирается динамически через buildVideoFilter() с учётом
+        // переключателя «Пропорции» (squash = старый scale без сохранения
+        // пропорций, original = scale + pad с чёрными полосами) и scaleFlags
+        // из пресета. -af добавляется только если включён переключатель
+        // «Сломанный микрофон» — фильтр берётся из пресета (audioFilter) или
+        // DEFAULT_AUDIO_FILTER; иначе звук идёт через базовое сжатие из
+        // пресета (-c:a/-b:a), без доп. фильтра.
         const preset = PRESETS[currentPreset];
-        const vfArgs = ["-vf", buildVideoFilter(preset, isPortrait)];
-        const afArgs = micEffectOn ? ["-af", AUDIO_FILTER] : [];
+        const vfArgs = ["-vf", buildVideoFilter(preset)];
+        const afArgs = micEffectOn ? ["-af", preset.audioFilter || DEFAULT_AUDIO_FILTER] : [];
         const args = ["-i", inName]
           .concat(vfArgs)
           .concat(afArgs)
@@ -702,7 +683,8 @@
         const blobUrl = URL.createObjectURL(blob);
         resultVideo.src = blobUrl;
         resultWrap.classList.add("active");
-        setTitle("ГОТОВО — 2007");
+        applyResultOrientation();
+        setTitle("✓ ГОТОВО");
         setStatus("📱 " + PRESETS[currentPreset].title + " — готов! Сохрани или отправь.");
 
         // Прокрутка к результату.
@@ -723,6 +705,26 @@
     function getExt(name) {
       const m = /\.([a-z0-9]{2,4})$/i.exec(name);
       return m ? "." + m[1].toLowerCase() : ".mp4";
+    }
+
+    // Переключает портретный режим превью по реальной геометрии готового
+    // видео (а не по пресету) — это источник истины: сработает для любого
+    // пресета и режима «Пропорции». Класс .portrait делает видео узким и
+    // высоким, по центру — без чёрных полос по бокам и без растягивания.
+    function applyResultOrientation() {
+      resultVideo.classList.remove("portrait");
+      const apply = () => {
+        if (resultVideo.videoHeight > resultVideo.videoWidth) {
+          resultVideo.classList.add("portrait");
+        }
+      };
+      // Метаданные уже могут быть загружены (видео сразу autoplay/loop) —
+      // тогда dimensions доступны сразу; иначе ждём событие.
+      if (resultVideo.videoWidth && resultVideo.videoHeight) {
+        apply();
+      } else {
+        resultVideo.addEventListener("loadedmetadata", apply, { once: true });
+      }
     }
 
     // ── Скачать / поделиться / ещё раз ────────────────────────
@@ -785,6 +787,9 @@
       fileInput.value = "";
       filenameEl.textContent = "—";
       processBtn.disabled = true;
+      // Сбрасываем портретный режим, чтобы он не остался от прошлого ролика.
+      resultVideo.classList.remove("portrait");
+      resultVideo.removeAttribute("src");
     });
 
     // Подсказка по времени обработки в зависимости от длительности.
