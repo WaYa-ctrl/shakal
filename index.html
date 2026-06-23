@@ -442,12 +442,50 @@
     });
 
     // Собирает финальную строку -vf для текущего пресета с учётом aspectMode.
-    function buildVideoFilter(preset) {
-      const { width: W, height: H, vfPostScale } = preset;
+    // Если swapDimensions=true (видео портретное и aspectMode=original),
+    // меняем местами W/H пресета — итоговый кадр становится вертикальным,
+    // чтобы портретное видео не сжималось в узкую полоску с огромными
+    // чёрными полями по бокам, а сохраняло заметный размер.
+    function buildVideoFilter(preset, swapDimensions) {
+      let { width: W, height: H, vfPostScale } = preset;
+      if (aspectMode === "original" && swapDimensions) {
+        [W, H] = [H, W];
+      }
       const scalePart = aspectMode === "original"
         ? `scale=${W}:${H}:force_original_aspect_ratio=decrease:flags=neighbor,pad=${W}:${H}:(ow-iw)/2:(oh-ih)/2`
         : `scale=${W}:${H}:flags=neighbor`;
       return `${scalePart},${vfPostScale}`;
+    }
+
+    // Определяет, является ли видео портретным (после применения autorotate
+    // по displaymatrix-метаданным), декодируя один кадр в PNG через сам
+    // ffmpeg.wasm и читая реальные ширину/высоту результата. Это надёжнее,
+    // чем доверять "сырым" width/height входного файла, потому что они не
+    // учитывают поворот, заданный метаданными (типичная ситуация для видео
+    // со смартфона, снятого в портретной ориентации).
+    async function isPortraitVideo(ff, inName) {
+      const probeName = "probe_" + Date.now() + ".png";
+      try {
+        await ff.exec(["-i", inName, "-frames:v", "1", "-update", "1", probeName]);
+        const data = await ff.readFile(probeName);
+        const { width, height } = readPngDimensions(data);
+        try { await ff.deleteFile(probeName); } catch (_) {}
+        if (width && height) return height > width;
+      } catch (err) {
+        console.warn("Не удалось определить ориентацию видео, считаем горизонтальным:", err);
+      }
+      return false;
+    }
+
+    // Читает ширину/высоту PNG прямо из заголовка файла (IHDR-чанк),
+    // без декодирования всего изображения — быстро и не требует Canvas.
+    function readPngDimensions(bytes) {
+      // PNG: 8 байт сигнатуры, затем чанк IHDR с длиной(4)+тип(4)+данные.
+      // Width = байты [16..20), Height = байты [20..24), big-endian.
+      if (!bytes || bytes.length < 24) return {};
+      const width = (bytes[16] << 24) | (bytes[17] << 16) | (bytes[18] << 8) | bytes[19];
+      const height = (bytes[20] << 24) | (bytes[21] << 16) | (bytes[22] << 8) | bytes[23];
+      return { width: width >>> 0, height: height >>> 0 };
     }
 
     document.querySelectorAll(".preset").forEach(b => {
@@ -613,6 +651,16 @@
         const outName = "output.mp4";
         await ff.writeFile(inName, await fetchFile(selectedFile));
 
+        // Для режима "original" дополнительно проверяем ориентацию видео
+        // (см. isPortraitVideo выше) — это нужно сделать ДО подписки на
+        // событие "progress" ниже, чтобы пробное извлечение одного кадра
+        // не дёргало прогресс-бар до начала настоящей обработки.
+        let isPortrait = false;
+        if (aspectMode === "original") {
+          setStatus("🔎 Определяю ориентацию видео...");
+          isPortrait = await isPortraitVideo(ff, inName);
+        }
+
         // Прогресс привязан к обработке (0..1).
         const progressHandler = ({ progress }) => setProgress(progress);
         ff.on("progress", progressHandler);
@@ -625,8 +673,13 @@
         // + pad с чёрными полосами). -af добавляется только если включён
         // переключатель "Сломанный микрофон" — иначе звук идёт через
         // базовое сжатие из пресета (-c:a/-b:a), без доп. фильтра.
+        //
+        // isPortrait (определён выше): если видео портретное, меняем
+        // местами W/H пресета, чтобы итоговый кадр тоже был вертикальным —
+        // иначе портретное видео сжималось бы в узкую полоску с огромными
+        // чёрными полями по бокам внутри горизонтального кадра пресета.
         const preset = PRESETS[currentPreset];
-        const vfArgs = ["-vf", buildVideoFilter(preset)];
+        const vfArgs = ["-vf", buildVideoFilter(preset, isPortrait)];
         const afArgs = micEffectOn ? ["-af", AUDIO_FILTER] : [];
         const args = ["-i", inName]
           .concat(vfArgs)
