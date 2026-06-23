@@ -434,41 +434,12 @@
         encodeArgs: ["-r", "24", "-c:v", "libx264", "-b:v", "250k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
                      "-c:a", "aac", "-b:a", "24k"]
       },
-      q_phonk: {
+     q_phonk: {
         title: "🌃 Phonk",
-        // Перенесено из Lightroom-пресета «Cinematic Nature» (JNCK Media,
-        // файл Zen_Japan.md / .xmp). В FFmpeg нет аналогов HSL и адаптивного
-        // Clarity/Texture/Dehaze, поэтому перевод приблизительный — но
-        // характер передан: матовая плёнка + teal/циан в холодных зонах +
-        // тёплые света + виньетка. Сопоставление по настройкам пресета:
-        //   Tone curve (0/0, 40/35, 125/125, 254/238) + Blacks+34 + Whites-59
-        //     → curves=master с поднятым чёрным (0/0.06) и опущенными светами
-        //       (1/0.9): матовый faded-film вид, НЕ выбитый контраст;
-        //   Contrast-13, но Clarity+22 / Texture+37 / Dehaze+33
-        //     → eq=contrast=1.12 (умеренно: кривая снимает, clarity добавляет
-        //       средне-тоновый объём, FFmpeg локальный контраст не умеет);
-        //   Exposure-0.10 → brightness=-0.04; Vibrance+12 → saturation=1.12;
-        //   HSL: Green→teal (Hue+96, Sat+99), Blue→циан (Hue-74, Lum-25),
-        //        Yellow приглушен (Sat-90), Aqua/Purple выкл (Sat-100)
-        //     → colorbalance: тени/полутона в teal (rs- bs+ gm+ bm+), света
-        //       тёплые (rh+), синева в светах давится (bh-);
-        //   PostCropVignette=-45 → было vignette=PI/5, НО это создавало
-        //     артефакт «круглого» кадра: радиальная виньетка затемняет углы
-        //     по кругу. В режиме «Сплюснуть» фото заполняет весь кадр 480×640,
-        //     и вьетка съедает реальные пиксели углов → виден тёмный круг
-        //     («эффект прожектора»). В режиме «Оригинал» углы и так чёрные
-        //     (pad), поэтому круг там не виден — отсюда ощущение, что баг
-        //     только в squash и только на фото. Жёсткую vignette убираю:
-        //     матовая кривая (curves) + teal-колоргрейд уже дают нужное
-        //     настроение без круглого артефакта.
-        //   Grain=0 → ЗЕРНА НЕТ (чистая картинка), фильтр noise убран.
-        // scaleFlags="" → плавный ресайз, без пикселизации (кинематограф, не ретро).
-        width: 480, height: 640,
-        scaleFlags: "",
-        vfPostScale: "curves=master='0/0.06 0.157/0.14 0.49/0.49 1/0.9',eq=contrast=1.12:brightness=-0.04:saturation=1.12,colorbalance=rs=-0.12:gs=0.03:bs=0.10:rh=0.05:gh=-0.02:bh=-0.04",
-        // Звук — стандартный перегруз/рация (DEFAULT_AUDIO_FILTER).
-        encodeArgs: ["-r", "24", "-c:v", "libx264", "-b:v", "300k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
-                     "-c:a", "aac", "-b:a", "32k"]
+        args: ["-vf", "scale=320:426:flags=neighbor,eq=contrast=1.5:brightness=0.15:gamma=1.4:saturation=1.3:gamma_g=1.1,unsharp=5:5:1.5,noise=c0s=45:c1s=30:allf=t",
+               "-r", "24", "-c:v", "libx264", "-b:v", "250k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
+               "-ac", "1", "-ar", "8000", "-c:a", "aac", "-b:a", "24k"]
+      }
       }
     };
     let currentPreset = "q_2007";
