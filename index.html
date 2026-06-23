@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
   <title>📱 Вернись в 2007-й</title>
 
+  <!-- Telegram Mini App SDK -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
   <style>
@@ -139,16 +140,7 @@
     .result-actions .btn { margin-top: 0; }
 
     .warn { font-size: 10px; color: #ffb380; text-align:center; margin-top: 12px; line-height: 1.4;}
-    
-    /* Исправленный класс для инпута */
-    .hidden-input {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      opacity: 0;
-      z-index: -1;
-    }
-    
+    .hidden-input { display: none; }
     .spinner { display:inline-block; width:12px; height:12px; border:2px solid rgba(255,255,255,.3); border-top-color:#fff; border-radius:50%; animation: spin .7s linear infinite; vertical-align: middle; margin-right:6px;}
     @keyframes spin { to { transform: rotate(360deg); } }
   </style>
@@ -157,6 +149,7 @@
   <div class="phone">
     <div class="brand">📱 SHAKAL · 2007 EDITION</div>
 
+    <!-- LCD-экран -->
     <div class="screen">
       <div class="lcd-title" id="lcdTitle">ВЕРНИСЬ В 2007-Й</div>
       <div class="lcd-status" id="lcdStatus">Выбери видео и верни его в эпоху пикселей</div>
@@ -171,6 +164,7 @@
       </div>
     </div>
 
+    <!-- Пресеты качества -->
     <div class="presets">
       <button class="preset active" data-preset="q_2007">📱 2007<small>176×144</small></button>
       <button class="preset" data-preset="q_brick">📟 BRICK<small>128×96</small></button>
@@ -183,6 +177,7 @@
     <label for="fileInput" class="btn secondary" id="pickBtn">📁 Выбрать видео</label>
     <button class="btn amber" id="processBtn" disabled>🔧 Сделать шакально</button>
 
+    <!-- Результат -->
     <div class="result-wrap" id="resultWrap">
       <video class="result-video" id="resultVideo" autoplay loop muted playsinline controls></video>
       <div class="result-actions">
@@ -197,6 +192,7 @@
     </div>
   </div>
 
+  <!-- ffmpeg.wasm (однопоточная сборка — НЕ требует SharedArrayBuffer) -->
   <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.12.10/dist/umd/ffmpeg.js"></script>
   <script src="https://unpkg.com/@ffmpeg/util@0.12.10/dist/umd/index.js"></script>
 
@@ -204,9 +200,27 @@
   (function () {
     "use strict";
 
+    // ── Telegram WebApp ───────────────────────────────────────
     const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
     if (tg) { tg.expand(); tg.ready && tg.ready(); }
 
+    // ── Диагностика: показываем любую неотловленную ошибку на LCD-экране ──
+    // Без этого скрипт может "молча" падать (например, если CDN с ffmpeg.wasm
+    // не успел отдать библиотеку), и пользователь просто не видит реакции
+    // после выбора файла — кнопка-то нативная, а вот обработка уже на JS.
+    window.addEventListener("error", (e) => {
+      const el = document.getElementById("lcdStatus");
+      if (el) el.innerHTML = "❌ Скрипт упал: " + (e.message || "неизвестная ошибка");
+      console.error("Global error:", e.error || e.message);
+    });
+    window.addEventListener("unhandledrejection", (e) => {
+      const el = document.getElementById("lcdStatus");
+      const msg = (e.reason && e.reason.message) ? e.reason.message : String(e.reason);
+      if (el) el.innerHTML = "❌ Ошибка: " + msg;
+      console.error("Unhandled rejection:", e.reason);
+    });
+
+    // Часы на «экране» для атмосферы
     function tick() {
       const d = new Date();
       const z = n => String(n).padStart(2, "0");
@@ -215,6 +229,7 @@
     }
     tick(); setInterval(tick, 30000);
 
+    // ── DOM ───────────────────────────────────────────────────
     const $ = id => document.getElementById(id);
     const lcdStatus = $("lcdStatus"), lcdTitle = $("lcdTitle");
     const progressWrap = $("progressWrap"), progressFill = $("progressFill"), progressPct = $("progressPct");
@@ -230,6 +245,8 @@
       progressPct.textContent = pct + "%";
     }
 
+    // ── Пресеты (значения = те, что в Python-боте) ────────────
+    // Порядок фильтров оптимизирован: scale → eq → noise (на крошечном кадре — быстро).
     const PRESETS = {
       q_brick: {
         title: "📟 Brick 2003",
@@ -238,7 +255,9 @@
                "-ac", "1", "-ar", "8000", "-c:a", "aac", "-b:a", "12k"]
       },
       q_2007: {
-        title: "📱 2007",
+        title: "📱 2007 (классика)",
+        // ИСХОДНЫЙ фильтр из ТЗ, оптимизированный по порядку:
+        // eq=contrast=1.4:brightness=0.15:saturation=1.6, scale=176:144:flags=neighbor, noise=c0s=30:c1s=40:allf=t
         args: ["-vf", "scale=176:144:flags=neighbor,eq=contrast=1.4:brightness=0.15:saturation=1.6,noise=c0s=30:c1s=40:allf=t",
                "-r", "10", "-c:v", "libx264", "-b:v", "70k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
                "-ac", "1", "-ar", "8000", "-c:a", "aac", "-b:a", "16k"]
@@ -260,18 +279,38 @@
       });
     });
 
-    const { FFmpeg } = FFmpegWASM;
-    const { toBlobURL, fetchFile } = FFmpegUtil;
+    // ── ffmpeg.wasm ───────────────────────────────────────────
+    // ВАЖНО: не деструктурируем глобалы на этапе загрузки скрипта.
+    // Если CDN ещё не успел отдать/выполнить ffmpeg.js или util.js
+    // (медленная сеть, временный сбой unpkg, кеш WebView и т.п.),
+    // обращение к FFmpegWASM/FFmpegUtil здесь бросает ReferenceError
+    // СРАЗУ при разборе всего <script> — и тогда НИ ОДИН обработчик
+    // в файле не навешивается, включая fileInput "change".
+    // Поэтому проверяем их наличие лениво, внутри ensureFFmpeg().
     const CORE_BASE = "https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd";
     let ffmpeg = null;
     let ffmpegReady = false;
+    let fetchFile = null;
 
     async function ensureFFmpeg() {
       if (ffmpegReady) return ffmpeg;
-      setStatus('<span class="spinner"></span>Загружаю движок FFmpeg (~25 МБ)...');
+
+      if (typeof FFmpegWASM === "undefined" || typeof FFmpegUtil === "undefined") {
+        throw new Error(
+          "Не загрузился движок FFmpeg (библиотека с CDN). " +
+          "Проверь интернет-соединение и попробуй ещё раз."
+        );
+      }
+      const { FFmpeg } = FFmpegWASM;
+      ({ fetchFile } = FFmpegUtil);
+      const { toBlobURL } = FFmpegUtil;
+
+      setStatus('<span class="spinner"></span>Загружаю движок FFmpeg (~25 МБ, один раз)...');
       processBtn.disabled = true;
       ffmpeg = new FFmpeg();
+      // Прогресс с этапа загрузки ядра не привязан — используем «log» как индикатор жизни.
       ffmpeg.on("log", ({ message }) => {
+        // Показываем короткие строки лога, чтобы экран «жил».
         if (message && message.length < 60) setStatus("⚙️ " + message);
       });
       const coreURL = await toBlobURL(`${CORE_BASE}/ffmpeg-core.js`, "text/javascript");
@@ -281,12 +320,21 @@
       return ffmpeg;
     }
 
-    // ИСПРАВЛЕННЫЙ БЛОК ВЫБОРА ФАЙЛА
+    // ── Выбор файла ───────────────────────────────────────────
+    let selectedFile = null;
+    let selectedDuration = 0;
+
+    // Кнопка выбора файла реализована как <label for="fileInput"> — это нативный
+    // браузерный механизм, который надёжно открывает системный выбор файла
+    // на iOS/Android внутри Telegram WebView (где программный .click() часто
+    // блокируется). Поэтому тут НЕТ обработчика клика на pickBtn.
+
     fileInput.addEventListener("change", (e) => {
       const file = e.target.files && e.target.files[0];
       if (!file) return;
 
-      const MAX_BYTES = 100 * 1024 * 1024;
+      // Лимит размера
+      const MAX_BYTES = 100 * 1024 * 1024; // 100 МБ
       if (file.size > MAX_BYTES) {
         setStatus("❌ Файл слишком большой (лимит 100 МБ).");
         return;
@@ -301,6 +349,7 @@
       setStatus("Готово к обработке. Жми «Сделать шакально» 🔧");
     });
 
+    // ── Обработка ─────────────────────────────────────────────
     processBtn.addEventListener("click", async () => {
       if (!selectedFile) return;
       resultWrap.classList.remove("active");
@@ -316,11 +365,13 @@
         const outName = "output.mp4";
         await ff.writeFile(inName, await fetchFile(selectedFile));
 
+        // Прогресс привязан к обработке (0..1).
         const progressHandler = ({ progress }) => setProgress(progress);
         ff.on("progress", progressHandler);
 
         setStatus("⚙️ Кодирую... телефон старается изо всех сил");
 
+        // Сборка аргументов: -i input + пресет + output
         const args = ["-i", inName].concat(PRESETS[currentPreset].args).concat([outName]);
         await ff.exec(args);
 
@@ -330,6 +381,7 @@
         setStatus("📦 Читаю результат...");
         const data = await ff.readFile(outName);
 
+        // Чистим память wasm.
         try { await ff.deleteFile(inName); await ff.deleteFile(outName); } catch (_) {}
 
         const blob = new Blob([data.buffer], { type: "video/mp4" });
@@ -339,8 +391,10 @@
         setTitle("ГОТОВО — 2007");
         setStatus("📱 " + PRESETS[currentPreset].title + " — готов! Сохрани или отправь.");
 
+        // Прокрутка к результату.
         resultWrap.scrollIntoView({ behavior: "smooth", block: "nearest" });
 
+        // Запоминаем blob для кнопок.
         lastBlob = blob;
         lastFileName = "shkal_" + Date.now() + ".mp4";
       } catch (err) {
@@ -357,6 +411,7 @@
       return m ? "." + m[1].toLowerCase() : ".mp4";
     }
 
+    // ── Скачать / поделиться / ещё раз ────────────────────────
     let lastBlob = null, lastFileName = "shkal.mp4";
 
     downloadBtn.addEventListener("click", () => {
@@ -372,14 +427,18 @@
     shareBtn.addEventListener("click", async () => {
       if (!lastBlob) return;
       const file = new File([lastBlob], lastFileName, { type: "video/mp4" });
+      // Web Share API с файлами — открывает системную шеринговую панель
+      // (можно выбрать Telegram → отправить в чат/контакту). Поддерживается не везде.
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         try {
           await navigator.share({ files: [file], title: "Шакал 2007", text: "📱 2007 позвонил..." });
           return;
         } catch (e) {
-          if (e && e.name === "AbortError") return; 
+          if (e && e.name === "AbortError") return; // пользователь отменил
         }
       }
+      // tg.sendData не передаёт файлы (>4096 байт) — это ограничение Telegram.
+      // Поэтому предлагаем просто скачать и переслать вручную.
       setStatus("📤 Прямая отправка файла из Mini App невозможна. 👇 Нажми «Скачать», затем перешли видео в чат вручную.");
       downloadBtn.click();
     });
@@ -396,6 +455,9 @@
       processBtn.disabled = true;
     });
 
+    // Подсказка по времени обработки в зависимости от длительности.
+    // (не блокируем, просто информируем)
+    fileInput.addEventListener && null;
   })();
   </script>
 </body>
