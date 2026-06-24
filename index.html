@@ -247,7 +247,7 @@
       <button class="preset" data-preset="q_dag">🪙 Дагерреотип<small>360×360</small></button>
       <button class="preset" data-preset="q_salt">📜 Соляная<small>360×360</small></button>
       <button class="preset" data-preset="q_arch">🏛️ Архив<small>480×640</small></button>
-      <button class="preset" data-preset="q_japan">🌸 Japan<small>480×640</small></button>
+      <button class="preset" data-preset="q_japan">🇯🇵 Japan VHS<small>480×640</small></button>
     </div>
 
     <div class="filename" id="filename">—</div>
@@ -653,18 +653,20 @@
                      "-c:a", "aac", "-b:a", "48k"]
       },
       q_japan: {
-        title: "🌸 Japan",
-        // По референсу: ЯРКАЯ тёплая светящаяся кожа (приподнятые света,
-        // не затемнение!) на контрасте с тёмным фоном. Раньше gamma<1
-        // утемняла ВСЁ изображение, включая лицо — получалось тускло.
-        // Правильно: gamma>1 высветляет средние тона/кожу, brightness
-        // в плюс держит общую светлость, высокий contrast добавляет
-        // глубину теням фона без утемнения лица. Тёплый оранжево-розовый
-        // сдвиг через colorbalance в светах (rh/rs), лёгкая зелень в тенях
-        // фона для контраста. vignette не используем (крашит wasm).
+        title: "🇯🇵 Japan VHS",
+        // Японский камкордер 90-х (как на референс-скринах): letterbox-полосы
+        // сверху/снизу с надписями (счётчик кассеты, режим записи, SP/STANDBY,
+        // 16BIT, таймкод) — рисуются НЕ через drawtext (нет CJK-шрифта/глифов
+        // в урезанной wasm-сборке ffmpeg-core), а накладываются готовой PNG
+        // (assets/overlay_japan.png, прозрачный фон) через overlay-фильтр.
+        // Цвет: приглушённый холодноватый VHS — чуть пониженная насыщенность,
+        // лёгкий сине-зелёный сдвиг в тенях, среднее зерно, мягкий контраст
+        // (без жёсткой пересветки). overlayFile подключает второй -i и
+        // переключает сборку фильтра на -filter_complex (см. processBtn).
         width: 480, height: 640,
         scaleFlags: "",
-        vfPostScale: "eq=contrast=1.4:brightness=0.08:gamma=1.3:saturation=1.4,colorbalance=rh=0.18:rs=0.10:gh=0.05:bh=-0.12:bs=-0.02,noise=c0s=16:c1s=8:allf=t",
+        overlayFile: "assets/overlay_japan.png",
+        vfPostScale: "eq=contrast=1.15:saturation=0.85:gamma=1.05,colorbalance=gs=0.04:bs=0.05:rs=-0.02,hue=s=0.9,noise=c0s=16:c1s=10:allf=t",
         encodeArgs: ["-r", "24", "-c:v", "libx264", "-b:v", "340k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
                      "-c:a", "aac", "-b:a", "48k"]
       }
@@ -708,6 +710,17 @@
         ? `scale=${W}:${H}:force_original_aspect_ratio=decrease${flagPart},pad=${W}:${H}:(ow-iw)/2:(oh-ih)/2`
         : `scale=${W}:${H}${flagPart}`;
       return `${scalePart},${vfPostScale}`;
+    }
+
+    // Для пресетов с overlayFile (PNG-оверлей с надписями, напр. q_japan):
+    // собирает -filter_complex с ДВУМЯ входами — [0:v] это видео/фото,
+    // [1:v] это PNG-картинка надписей. Цветокоррекция применяется к [0:v]
+    // (как обычно через buildVideoFilter), затем оверлей кладётся СВЕРХУ
+    // через overlay=0:0 (картинка того же размера W×H, без сдвига).
+    // PNG грузится в виртуальную FS ffmpeg один раз — см. ensureOverlayLoaded.
+    function buildOverlayFilterComplex(preset) {
+      const base = buildVideoFilter(preset);
+      return `[0:v]${base}[base];[base][1:v]overlay=0:0[out]`;
     }
 
     document.querySelectorAll(".preset").forEach(b => {
@@ -800,6 +813,26 @@
       await ffmpeg.load({ coreURL, wasmURL });
       ffmpegReady = true;
       return ffmpeg;
+    }
+
+    // ── Загрузка PNG-оверлея (для пресетов с overlayFile, напр. q_japan) ──
+    // Кешируем по имени файла, чтобы не качать повторно при смене пресетов
+    // или повторной обработке. Имя в виртуальной FS ffmpeg — фиксированное
+    // ("overlay.png"), независимо от исходного пути в assets/.
+    const loadedOverlays = new Set();
+    async function ensureOverlayLoaded(overlayPath) {
+      if (loadedOverlays.has(overlayPath)) return;
+      const url = `${overlayPath}?${ASSET_VERSION}`;
+      const res = await fetch(url);
+      if (!res.ok) {
+        throw new Error(
+          `Не удалось загрузить оверлей: ${url} (HTTP ${res.status}). ` +
+          `Проверь, что файл ${overlayPath} лежит рядом с index.html.`
+        );
+      }
+      const buf = await res.arrayBuffer();
+      await ffmpeg.writeFile("overlay.png", new Uint8Array(buf));
+      loadedOverlays.add(overlayPath);
     }
 
     // ── Выбор файла (галерея ИЛИ камера — одна логика) ────────
@@ -900,21 +933,36 @@
         setStatus("⚙️ Кодирую... телефон старается изо всех сил");
 
         // ── Сборка аргументов FFmpeg ──────────────────────────
-        // ВИДЕО: -i + [-vf] + [-af если микрофон вкл] + encodeArgs + output
-        // ФОТО:  -i + [-vf] + -frames:v 1 + output.jpg
+        // ВИДЕО: -i [-i overlay.png] + [-vf | -filter_complex] +
+        //        [-af если микрофон вкл] + encodeArgs + output
+        // ФОТО:  -i [-i overlay.png] + [-vf | -filter_complex] +
+        //        -frames:v 1 + output.jpg
         //   (никаких -c:a/-af, -r, -b:v — у одного кадра нет потока/битрейта).
-        // Строка -vf одна и та же, строится через buildVideoFilter() с учётом
-        // переключателя «Пропорции» — поэтому он работает и для фото, и для видео.
+        // Обычные пресеты идут через -vf (buildVideoFilter), как раньше.
+        // Пресеты с overlayFile (напр. q_japan) грузят PNG вторым -i и
+        // используют -filter_complex с overlay=0:0 (см. buildOverlayFilterComplex).
         const preset = PRESETS[currentPreset];
-        const vfArgs = ["-vf", buildVideoFilter(preset)];
+        const hasOverlay = !!preset.overlayFile;
+
+        if (hasOverlay) {
+          setStatus("🖼️ Загружаю оверлей...");
+          await ensureOverlayLoaded(preset.overlayFile);
+        }
+
+        const inputArgs = hasOverlay
+          ? ["-i", inName, "-i", "overlay.png"]
+          : ["-i", inName];
+        const filterArgs = hasOverlay
+          ? ["-filter_complex", buildOverlayFilterComplex(preset), "-map", "[out]"]
+          : ["-vf", buildVideoFilter(preset)];
 
         let args;
         if (isImage) {
-          args = ["-i", inName].concat(vfArgs).concat(["-frames:v", "1", outName]);
+          args = inputArgs.concat(filterArgs).concat(["-frames:v", "1", outName]);
         } else {
           const afArgs = micEffectOn ? ["-af", preset.audioFilter || DEFAULT_AUDIO_FILTER] : [];
-          args = ["-i", inName]
-            .concat(vfArgs)
+          args = inputArgs
+            .concat(filterArgs)
             .concat(afArgs)
             .concat(preset.encodeArgs)
             .concat([outName]);
