@@ -247,6 +247,7 @@
       <button class="preset" data-preset="q_dag">🪙 Дагерреотип<small>360×360</small></button>
       <button class="preset" data-preset="q_salt">📜 Соляная<small>360×360</small></button>
       <button class="preset" data-preset="q_arch">🏛️ Архив<small>480×640</small></button>
+      <button class="preset" data-preset="q_japan">🌸 Japan<small>480×640</small></button>
     </div>
 
     <div class="filename" id="filename">—</div>
@@ -649,6 +650,22 @@
         scaleFlags: "",
         vfPostScale: "eq=contrast=1.25:brightness=-0.05:gamma=0.95:saturation=0.95,colorbalance=gs=0.03:bs=0.08:rh=0.03:rs=-0.02,noise=c0s=20:allf=t",
         encodeArgs: ["-r", "24", "-c:v", "libx264", "-b:v", "350k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
+                     "-c:a", "aac", "-b:a", "48k"]
+      },
+      q_japan: {
+        title: "🌸 Japan",
+        // По референсу: ЯРКАЯ тёплая светящаяся кожа (приподнятые света,
+        // не затемнение!) на контрасте с тёмным фоном. Раньше gamma<1
+        // утемняла ВСЁ изображение, включая лицо — получалось тускло.
+        // Правильно: gamma>1 высветляет средние тона/кожу, brightness
+        // в плюс держит общую светлость, высокий contrast добавляет
+        // глубину теням фона без утемнения лица. Тёплый оранжево-розовый
+        // сдвиг через colorbalance в светах (rh/rs), лёгкая зелень в тенях
+        // фона для контраста. vignette не используем (крашит wasm).
+        width: 480, height: 640,
+        scaleFlags: "",
+        vfPostScale: "eq=contrast=1.4:brightness=0.08:gamma=1.3:saturation=1.4,colorbalance=rh=0.18:rs=0.10:gh=0.05:bh=-0.12:bs=-0.02,noise=c0s=16:c1s=8:allf=t",
+        encodeArgs: ["-r", "24", "-c:v", "libx264", "-b:v", "340k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
                      "-c:a", "aac", "-b:a", "48k"]
       }
     };
