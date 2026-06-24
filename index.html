@@ -726,9 +726,15 @@
       const { width: W, height: H, vfPostScale } = preset;
       const flags = preset.scaleFlags === undefined ? "neighbor" : preset.scaleFlags;
       const flagPart = flags ? `:flags=${flags}` : "";
+      // format=yuv420p СРАЗУ после scale/pad — фикс чёрного экрана на части
+      // .mov (iPhone HEVC/HDR/10-бит/full-range). Без этого eq/noise работают
+      // на «сыром» формате декодера, а -pix_fmt yuv420p применяется только на
+      // кодировании — значения успевают схлопнуться в чёрное. Принудительный
+      // 8-бит yuv420p на входе фильтра лечит это. Для обычных H.264 8-бит
+      // файлов это no-op (они и так yuv420p) — вид не меняется.
       const scalePart = aspectMode === "original"
-        ? `scale=${W}:${H}:force_original_aspect_ratio=decrease${flagPart},pad=${W}:${H}:(ow-iw)/2:(oh-ih)/2`
-        : `scale=${W}:${H}${flagPart}`;
+        ? `scale=${W}:${H}:force_original_aspect_ratio=decrease${flagPart},pad=${W}:${H}:(ow-iw)/2:(oh-ih)/2,format=yuv420p`
+        : `scale=${W}:${H}${flagPart},format=yuv420p`;
       return `${scalePart},${vfPostScale}`;
     }
 
@@ -973,7 +979,7 @@
           ? ["-i", inName, "-i", "overlay.png"]
           : ["-i", inName];
         const filterArgs = hasOverlay
-          ? ["-filter_complex", buildOverlayFilterComplex(preset), "-map", "[out]"]
+          ? ["-filter_complex", buildOverlayFilterComplex(preset), "-map", "[out]", "-map", "0:a?"]
           : ["-vf", buildVideoFilter(preset)];
 
         let args;
