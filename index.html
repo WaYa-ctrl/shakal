@@ -234,7 +234,9 @@
       <button class="preset" data-preset="q_nul">🕹️ Нулевые<small>480×360</small></button>
       <button class="preset" data-preset="q_vhs">📼 VHS<small>320×240</small></button>
       <button class="preset" data-preset="q_phonk">🌃 Phonk<small>320×426</small></button>
+      <button class="preset" data-preset="q_mafia">🎬 Мафия<small>480×640</small></button>
       <button class="preset" data-preset="q_kino">📷 Кино 80-х<small>480×640</small></button>
+      <button class="preset" data-preset="q_film">🎞️ Плёнка<small>480×360</small></button>
       <button class="preset" data-preset="q_pol">🔆 Полароид<small>480×480</small></button>
       <button class="preset" data-preset="q_koda">🎞️ Kodak 70<small>480×360</small></button>
       <button class="preset" data-preset="q_super8">📽️ Super 8<small>360×270</small></button>
@@ -453,23 +455,43 @@
       },
       q_vhs: {
         title: "📼 VHS",
-        // Ретро-видак: перенасыщенный «расплывшийся» цвет, мягкое размытие
-        // магнитной ленты, зернистый шум. Цветовой дрейф через hue+colorbalance
-        // (chromashift крашил урезанную wasm-сборку — заменён).
+        // Ретро-видак: перенасыщенный «расплывшийся» цвет, зернистый шум.
+        // Цветовой дрейф через hue+colorbalance (chromashift крашил урезанную
+        // wasm-сборку — заменён). boxblur убран (крашил wasm), мягкость ленты
+        // эмулируется через gamma>1 (лёгкое «выцветание»/мягкость).
         width: 320, height: 240,
         scaleFlags: "",
-        vfPostScale: "eq=contrast=1.1:saturation=1.4:brightness=0.03,hue=h=4:s=1.05,colorbalance=rs=0.04:gs=0.02:bs=-0.04,boxblur=1:1,noise=c0s=28:c1s=20:allf=t",
+        vfPostScale: "eq=contrast=1.1:saturation=1.4:brightness=0.03:gamma=1.06,hue=h=4:s=1.05,colorbalance=rs=0.04:gs=0.02:bs=-0.04,noise=c0s=28:c1s=20:allf=t",
         encodeArgs: ["-r", "24", "-c:v", "libx264", "-b:v", "200k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
                      "-ac", "1", "-ar", "11025", "-c:a", "aac", "-b:a", "24k"]
       },
       q_phonk: {
         title: "🌃 Phonk",
-        // JDM/drift night: дёрзкая резкость, лёгкий зелёный в тенях. Зерно
-        // умеренное (18/12) — 45/30 было перебором. Виньетки НЕТ (круг на фото).
+        // JDM/drift night: лёгкий зелёный в тенях. Зерно умеренное (18/12) —
+        // 45/30 было перебором. Виньетки НЕТ (круг на фото).
+        // unsharp убран для гарантии стабильности (хотя на мелком кадре работал),
+        // дёрзкая резкость держит высокий контраст 1.6.
         width: 320, height: 426,
-        vfPostScale: "eq=contrast=1.5:brightness=0.15:gamma=1.4:saturation=1.3:gamma_g=1.1,unsharp=5:5:1.5,noise=c0s=18:c1s=12:allf=t",
+        vfPostScale: "eq=contrast=1.6:brightness=0.15:gamma=1.4:saturation=1.3:gamma_g=1.1,noise=c0s=18:c1s=12:allf=t",
         encodeArgs: ["-r", "24", "-c:v", "libx264", "-b:v", "300k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
                      "-c:a", "aac", "-b:a", "32k"]
+      },
+      q_mafia: {
+        title: "🎬 Мафия",
+        // Вирусный эффект «мафиозного портрета» (как фото Трампа и «боссов»):
+        // chiaroscuro — тёмный фон, ярко освещённое лицо, тёплый оранжево-
+        // янтарный свет, ВЫСОКИЙ контраст (выбитые тени, звонкие света),
+        // лёгкое зерно кожи. Достигается eq с высоким контрастом + поднятым
+        // brightness (света), colorbalance в тёплый оранжевый (rh/rs, bs-
+        // давит синеву → янтарь). gamma<1 углубляет тени (тёмный характер).
+        // ВАЖНО: unsharp ранее крашил wasm («memory access out of bounds») на
+        // больших фото — убран, «звонкость» держит контраст 1.6.
+        // Радиальной виньетки НЕТ (круглый артефакт на фото в squash).
+        width: 480, height: 640,
+        scaleFlags: "",
+        vfPostScale: "eq=contrast=1.6:brightness=0.08:gamma=0.88:saturation=1.25,colorbalance=rs=0.08:rh=0.10:gs=0.02:bs=-0.08,noise=c0s=10:allf=t",
+        encodeArgs: ["-r", "24", "-c:v", "libx264", "-b:v", "350k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
+                     "-c:a", "aac", "-b:a", "48k"]
       },
 
       // ════════ ПЛЁНОЧНАЯ ЭПОХА (XX век) ════════
@@ -481,6 +503,21 @@
         scaleFlags: "",
         vfPostScale: "eq=contrast=1.05:brightness=0.06:gamma=0.92:saturation=1.1,colorbalance=rs=-0.10:gs=0.03:bs=0.10:rh=0.05:gh=-0.02:bh=-0.04",
         encodeArgs: ["-r", "24", "-c:v", "libx264", "-b:v", "350k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
+                     "-c:a", "aac", "-b:a", "48k"]
+      },
+      q_film: {
+        title: "🎞️ Плёнка",
+        // Классическая цветная фотоплёнка (Agfa/Fuji 90-х): тёплый насыщенный
+        // вид с заметным, но НЕ грязным зерном, лёгкая выцветшая зелень в
+        // тенях и тёплый янтарь в светах — фирменный «аналоговый» характер.
+        // Отличие от Кино (там холодный teal, чисто) и Kodak (там жёлто-красно,
+        // контрастно): тут СБАЛАНСИРОВАННЫЕ цвета + выраженное зерно как
+        // отличительный признак «настоящей плёнки». gamma=1.04 — лёгкая
+        // матовость эмульсии. Только eq/noise/colorbalance/hue — стабильно.
+        width: 480, height: 360,
+        scaleFlags: "",
+        vfPostScale: "eq=contrast=1.12:brightness=0.03:gamma=1.04:saturation=1.25,hue=h=-1:s=1.03,colorbalance=rs=0.04:rh=0.05:gs=0.03:bs=-0.04,noise=c0s=20:c1s=14:allf=t",
+        encodeArgs: ["-r", "24", "-c:v", "libx264", "-b:v", "340k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
                      "-c:a", "aac", "-b:a", "48k"]
       },
       q_pol: {
@@ -508,9 +545,10 @@
         title: "📽️ Super 8",
         // Любительская киноплёнка Super 8: дёрганая, выцветшая, с крупным
         // зерном и тёплым выцветшим оттенком. Низкое разрешение, сильный шум.
+        // boxblur убран (крашил wasm), мягкость плёнки через gamma=1.08.
         width: 360, height: 270,
         scaleFlags: "",
-        vfPostScale: "eq=contrast=1.15:brightness=0.05:saturation=0.8:gamma=1.05,colorbalance=rs=0.05:rh=0.04:bs=-0.03,boxblur=1:1,noise=c0s=35:c1s=25:allf=t",
+        vfPostScale: "eq=contrast=1.15:brightness=0.05:saturation=0.8:gamma=1.08,colorbalance=rs=0.05:rh=0.04:bs=-0.03,noise=c0s=35:c1s=25:allf=t",
         encodeArgs: ["-r", "16", "-c:v", "libx264", "-b:v", "220k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
                      "-c:a", "aac", "-b:a", "32k"]
       },
@@ -529,22 +567,32 @@
       },
       q_doc: {
         title: "🗂️ Рассекречено",
-        // Вайб рассекреченного фото из архива: десатурация (почти ч/б) с
-        // холодным зеленовато-серым оттенком, сильное зерно, контрастность
-        // старой фотобумаги. Лёгкая резкость для «документального» вида.
+        // Вайб рассекреченного фото из архива. Важно ОТЛИЧАТЬСЯ от Ч/Б: тут
+        // НЕ чистый ч/б, а ХОЛОДНЫЙ зелёно-серый документ (как ксерокопия
+        // старого файла ФСБ/ЦРУ) — десатурация + холодный green-cyan сдвиг,
+        // низкая гамма (мрачно), сильное зерно. Ч/Б сверху нейтрально-тёплый
+        // и мягкий, тут — жёстко, серо, «копирка».
+        // unsharp убран (крашил wasm), «документальная» жёсткость держит
+        // контраст 1.45.
         width: 360, height: 270,
         scaleFlags: "",
-        vfPostScale: "eq=contrast=1.35:brightness=-0.04:saturation=0.15:gamma=1.05,colorbalance=gs=0.05:bs=0.04:rs=-0.02,unsharp=3:3:0.8,noise=c0s=30:c1s=22:allf=t",
+        vfPostScale: "eq=contrast=1.45:brightness=-0.10:gamma=0.88:saturation=0.08,colorbalance=gs=0.10:bs=0.12:rs=-0.05,noise=c0s=38:c1s=28:allf=t",
         encodeArgs: ["-r", "24", "-c:v", "libx264", "-b:v", "240k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
                      "-c:a", "aac", "-b:a", "48k"]
       },
       q_bw: {
         title: "⚫⚪ Ч/Б 50-х",
-        // Чистый чёрно-белый фоторепортажный стиль 1950-х: высокий контраст,
-        // полная десатурация, резкие тени, среднее зерно.
+        // Перенесено под референс (фото с лошадьми, ~1910-30-е):
+        // НЕЙТРАЛЬНО-тёплый винтажный ч/б. По референсу: средний контраст с
+        // хорошей тональной градацией (НЕ выжженный), глубокие тёмные тона,
+        // мягкая светлая кожа, лёгкая сепия/тёплый налёт времени, СРЕДНЕЕ
+        // зерно (видна текстура бумаги). Полная десатурация + warmth через
+        // colorbalance. gamma=0.97 даёт лёгкую матовость старой бумаги.
+        // ВАЖНО: boxblur ранее крашил wasm («memory access out of bounds») —
+        // убран, мягкость старой оптики эмулируется через gamma<1.
         width: 480, height: 360,
         scaleFlags: "",
-        vfPostScale: "eq=contrast=1.4:brightness=0.02:saturation=0:gamma=1.05,unsharp=3:3:0.6,noise=c0s=20:allf=t",
+        vfPostScale: "eq=contrast=1.18:brightness=0.04:gamma=0.97:saturation=0.0,colorbalance=rs=0.06:gs=0.03:rh=0.05,noise=c0s=24:allf=t",
         encodeArgs: ["-r", "24", "-c:v", "libx264", "-b:v", "300k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
                      "-c:a", "aac", "-b:a", "48k"]
       },
@@ -566,10 +614,11 @@
         title: "🪙 Дагерреотип",
         // Самая ранняя фотография (1839+): зеркальная серебряная пластина,
         // выцветший низкоконтрастный вид, грубое зерно, холодный металлический
-        // оттенок. Мягкое размытие оптики того времени.
+        // оттенок. boxblur убран (крашил wasm), мягкость старой оптики через
+        // gamma=1.1.
         width: 360, height: 360,
         scaleFlags: "",
-        vfPostScale: "eq=contrast=0.9:brightness=0.02:saturation=0.12:gamma=1.08,colorbalance=bs=0.06:gs=0.03:rs=-0.03,boxblur=1:1,noise=c0s=32:c1s=24:allf=t",
+        vfPostScale: "eq=contrast=0.9:brightness=0.02:saturation=0.12:gamma=1.1,colorbalance=bs=0.06:gs=0.03:rs=-0.03,noise=c0s=32:c1s=24:allf=t",
         encodeArgs: ["-r", "16", "-c:v", "libx264", "-b:v", "220k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
                      "-c:a", "aac", "-b:a", "32k"]
       },
@@ -577,9 +626,10 @@
         title: "📜 Соляная печать",
         // Соляные отпечатки 1850-х: очень мягкая, матовая, рыжевато-коричневая
         // картинка с низким контрастом и грубой текстурой бумаги.
+        // boxblur убран (крашил wasm), мягкость через gamma=1.0 + низкий контраст.
         width: 360, height: 360,
         scaleFlags: "",
-        vfPostScale: "eq=contrast=0.8:brightness=0.06:saturation=0.18:gamma=0.95,colorbalance=rs=0.18:gs=0.10:bs=-0.08:rh=0.06,boxblur=2:1,noise=c0s=26:allf=t",
+        vfPostScale: "eq=contrast=0.8:brightness=0.06:saturation=0.18:gamma=1.0,colorbalance=rs=0.18:gs=0.10:bs=-0.08:rh=0.06,noise=c0s=26:allf=t",
         encodeArgs: ["-r", "16", "-c:v", "libx264", "-b:v", "200k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
                      "-c:a", "aac", "-b:a", "32k"]
       },
