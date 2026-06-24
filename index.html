@@ -665,7 +665,7 @@
         // переключает сборку фильтра на -filter_complex (см. processBtn).
         width: 480, height: 640,
         scaleFlags: "",
-        overlayFile: "assets/overlay_japan.png",
+        overlayFile: "overlay_japan.png",
         vfPostScale: "eq=contrast=1.15:saturation=0.85:gamma=1.05,colorbalance=gs=0.04:bs=0.05:rs=-0.02,hue=s=0.9,noise=c0s=16:c1s=10:allf=t",
         encodeArgs: ["-r", "24", "-c:v", "libx264", "-b:v", "340k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
                      "-c:a", "aac", "-b:a", "48k"]
