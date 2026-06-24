@@ -115,6 +115,7 @@
     .btn:disabled { filter: grayscale(.7) brightness(.6); cursor: not-allowed; box-shadow: none; transform: none; }
     .btn.secondary { background: linear-gradient(180deg,#4a5664 0%,#2c3640 100%); box-shadow: 0 3px 0 #1a232c, 0 6px 14px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.2); }
     .btn.amber { background: linear-gradient(180deg,#ff9d2e 0%,#e0701a 100%); box-shadow: 0 3px 0 #9c4a0c, 0 6px 14px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.3); }
+    .btn.danger { background: linear-gradient(180deg,#d04040 0%,#9c1a1a 100%); box-shadow: 0 3px 0 #6a0c0c, 0 6px 14px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.25); }
     .btn + .btn { margin-top: 10px; }
 
     /* ── Пресеты качества ────────────────────────────────────── */
@@ -151,25 +152,50 @@
     .toggle-opt.active { color: #7CFC00; background: #0c1a0c; box-shadow: inset 0 0 8px rgba(124,252,0,.25); }
     .toggle-opt.active.warn-amber { color: #ff9d2e; background: #2a1a0c; box-shadow: inset 0 0 8px rgba(255,157,46,.25); }
 
+    /* ── Сетка «Обработать / Отмена» ─────────────────────────── */
+    .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .action-grid .btn { margin-top: 0; }
+
     /* ── Превью / результат ──────────────────────────────────── */
     .filename { font-size: 11px; color: #9fb2c4; text-align:center; word-break: break-all; margin-bottom: 10px; min-height: 14px;}
     .result-wrap { display:none; margin-top: 14px; }
     .result-wrap.active { display:block; }
-    .result-video {
-      width: 100%; border-radius: 10px; border: 3px solid #4a5664; background:#000;
-      box-shadow: inset 0 0 20px rgba(0,0,0,.7);
+
+    /* «Колодец» экрана, в который встроено фото/видео. Раньше рамка
+       (толстый бордюр + неоновое свечение) висела ПРЯМО на <video>/<img> —
+       из-за этого результат выглядел оторванным от интерфейса: зелёное
+       свечение контрастировало с тёмно-синим корпусом, и фон вокруг фото
+       «отставал», выглядел некрасиво. Теперь фаска/глубина/свечение живут
+       на контейнере .result-screen (он визуально связан с LCD-экраном
+       сверху), а медиа просто лежит внутри на чёрном фоне. */
+    .result-screen {
+      background: #000;
+      border-radius: 14px;
+      padding: 6px;                         /* рамка-кантик вокруг медиа */
+      border: 6px solid #151c24;            /* тёмный пластиковый корпус */
+      box-shadow:
+        inset 0 0 0 2px #050a05,            /* внутренний тёмный кантик */
+        inset 0 0 26px rgba(0,0,0,.85),     /* глубина как у CRT */
+        0 0 0 2px #2c3640,                  /* внешний пластиковый край */
+        0 0 12px rgba(124,252,0,.18),       /* мягкое свечение в цвет интерфейса */
+        0 10px 26px rgba(0,0,0,.6);         /* тень корпуса */
     }
-    /* Портретный режим превью для вертикальных пресетов (S-2012, Phonk):
-       видео/фото узкое/высокое и по центру, без чёрных полос по бокам и без
-       растягивания на всю ширину корпуса. Класс вешается из JS (см.
-       applyResultOrientation) по признаку height > width. Работает и для
-       <video>, и для <img>. */
+    /* Само медиа — без собственной рамки/свечения (всё на .result-screen).
+       Класс result-video вешается и на <video>, и на <img>. */
+    .result-video {
+      width: 100%;
+      display: block;
+      border-radius: 8px;
+      background: #000;
+    }
+    /* Портретный режим для вертикальных пресетов: медиа узкое/высокое,
+       по центру внутри экрана, без растягивания. Класс вешается из JS
+       (applyResultOrientation) по признаку h>w. */
     .result-video.portrait {
       width: auto;
       max-width: 100%;
       max-height: 58vh;
       margin: 0 auto;
-      display: block;
     }
     .result-actions { display:grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
     .result-actions .btn { margin-top: 0; }
@@ -199,12 +225,26 @@
       </div>
     </div>
 
-    <!-- Пресеты качества (порядок — по эпохам, Phonk — отдельный ночной стиль) -->
+    <!-- Пресеты качества. Хронология: цифровые (2000-е) → плёночные (XX в.)
+         → архив (до 1900). Все фильтры — eq/noise/hue/colorbalance/boxblur/unsharp:
+         гарантированно есть в урезанной wasm-сборке (curves/chromashift/vignette
+         ранее крашили движок). -->
     <div class="presets">
       <button class="preset active" data-preset="q_2007">📱 2007<small>176×144</small></button>
-      <button class="preset" data-preset="q_2010">📺 2010<small>320×240</small></button>
-      <button class="preset" data-preset="q_2012">📱 S-2012<small>360×640</small></button>
-      <button class="preset" data-preset="q_phonk">🌃 Phonk<small>480×640</small></button>
+      <button class="preset" data-preset="q_nul">🕹️ Нулевые<small>480×360</small></button>
+      <button class="preset" data-preset="q_vhs">📼 VHS<small>320×240</small></button>
+      <button class="preset" data-preset="q_phonk">🌃 Phonk<small>320×426</small></button>
+      <button class="preset" data-preset="q_kino">📷 Кино 80-х<small>480×640</small></button>
+      <button class="preset" data-preset="q_pol">🔆 Полароид<small>480×480</small></button>
+      <button class="preset" data-preset="q_koda">🎞️ Kodak 70<small>480×360</small></button>
+      <button class="preset" data-preset="q_super8">📽️ Super 8<small>360×270</small></button>
+      <button class="preset" data-preset="q_sepia">📜 Сепия<small>480×360</small></button>
+      <button class="preset" data-preset="q_doc">🗂️ Рассекреч.<small>360×270</small></button>
+      <button class="preset" data-preset="q_bw">⚫⚪ Ч/Б 50-х<small>480×360</small></button>
+      <button class="preset" data-preset="q_nego">🔘 Негатив<small>480×360</small></button>
+      <button class="preset" data-preset="q_dag">🪙 Дагерреотип<small>360×360</small></button>
+      <button class="preset" data-preset="q_salt">📜 Соляная<small>360×360</small></button>
+      <button class="preset" data-preset="q_arch">🏛️ Архив<small>480×640</small></button>
     </div>
 
     <div class="filename" id="filename">—</div>
@@ -228,18 +268,27 @@
     </div>
 
     <!-- Два способа выбрать исходник: из галереи или снять камерой.
-         Оба скрытых <input> ведут в одну и ту же логику (handleFileSelected). -->
+         Оба скрытых <input> ведут в одну логику (handleFileSelected). -->
     <input type="file" id="fileInput" class="hidden-input" accept="video/*, image/*" />
     <input type="file" id="cameraInput" class="hidden-input" accept="video/*, image/*" capture="environment" />
     <label for="fileInput" class="btn secondary">📁 Из галереи</label>
     <label for="cameraInput" class="btn secondary">📸 Снять сейчас</label>
-    <button class="btn amber" id="processBtn" disabled>🔧 Сделать шакально</button>
 
-    <!-- Результат. <video> и <img> лежат рядом; показывается тот, что
-         соответствует типу обработанного файла (видео → mp4, фото → jpg). -->
+    <!-- Обработать + Отмена: две колонки. Отмена активна только когда
+         выбран файл, до этого заблокирована. -->
+    <div class="action-grid" style="margin-top:10px;">
+      <button class="btn amber" id="processBtn" disabled>🔧 Обработать</button>
+      <button class="btn danger" id="cancelBtn" disabled>❌ Отмена</button>
+    </div>
+
+    <!-- Результат. Медиа встроено в «экран» .result-screen (фаска/глубина/
+         свечение на контейнере), показывается <video> или <img> в зависимости
+         от типа файла (видео → mp4, фото → jpg). -->
     <div class="result-wrap" id="resultWrap">
-      <video class="result-video" id="resultVideo" autoplay loop muted playsinline controls></video>
-      <img class="result-video" id="resultImage" alt="" style="display:none;" />
+      <div class="result-screen">
+        <video class="result-video" id="resultVideo" autoplay loop muted playsinline controls></video>
+        <img class="result-video" id="resultImage" alt="" style="display:none;" />
+      </div>
       <div class="result-actions">
         <button class="btn" id="shareBtn">💾 Сохранить / Поделиться</button>
         <button class="btn secondary" id="downloadBtn">👁️ Открыть файл</button>
@@ -261,9 +310,7 @@
 
     // ── Загрузка ffmpeg.wasm со своего хостинга (НЕ с CDN) ────
     // ВАЖНО: unpkg.com и cdn.jsdelivr.net недоступны из РФ (блокировка
-    // на уровне провайдера), поэтому раньше тут была CDN-логика с
-    // fallback — она не помогала, потому что блокировка не зависит от
-    // конкретного CDN-домена. Решение: файлы ffmpeg.wasm лежат рядом с
+    // на уровне провайдера), поэтому файлы ffmpeg.wasm лежат рядом с
     // index.html (папка vendor/) и грузятся с того же хоста, что и сама
     // страница — никакого стороннего CDN не остаётся в цепочке.
     //
@@ -271,19 +318,13 @@
     //   vendor/ffmpeg.js              — из @ffmpeg/ffmpeg, dist/umd/ffmpeg.js
     //   vendor/814.ffmpeg.js          — ОБЯЗАТЕЛЬНО рядом! это чанк-файл,
     //                                   который ffmpeg.js подгружает сам
-    //                                   (webpack разбил UMD-сборку на 2 файла)
     //   vendor/ffmpeg-util.js         — из @ffmpeg/util, dist/umd/index.js
     //   vendor/ffmpeg-core.js         — из @ffmpeg/core, dist/umd/ffmpeg-core.js
-    //   vendor/ffmpeg-core.wasm.part00 — 1-я часть движка (см. WASM_PARTS ниже)
+    //   vendor/ffmpeg-core.wasm.part00 — 1-я часть движка
     //   vendor/ffmpeg-core.wasm.part01 — 2-я часть движка
-    //   (сам .wasm весит ~31 МБ — больше лимита GitHub на загрузку файла
-    //   через веб-форму, 25 МБ, поэтому он разбит на 2 части поменьше и
-    //   склеивается обратно в браузере — см. loadWasmFromParts ниже)
-    const VENDOR_BASE = "vendor"; // относительный путь от index.html
-    // Cache-busting: GitHub Pages и браузеры могут долго кешировать
-    // статику по старому URL. Если меняешь файлы в vendor/ и проблема
-    // не пропадает — увеличь это число, чтобы заставить браузер скачать
-    // файлы заново, а не взять их из кеша.
+    const VENDOR_BASE = "vendor";
+    // Cache-busting: увеличь число, если файлы в vendor/ обновились, а
+    // браузер упорно тянет их из кеша.
     const ASSET_VERSION = "v2";
 
     function loadScript(url, timeoutMs = 20000) {
@@ -314,40 +355,28 @@
     }
 
     // Промис, который резолвится, когда обе библиотеки точно в window.
-    // Грузим ТИХО в фоне — без промежуточных статусов на LCD-экране.
-    // Раньше тут писалось «Загружаю ffmpeg.js...» / «Загружаю util.js...»,
-    // и после успешной загрузки последний статус оставался висеть —
-    // выглядело как «бесконечная загрузка util.js», хотя движок уже был
-    // готов. Теперь стартовый текст экрана не перекрывается, а статус
-    // загрузки появляется только когда пользователь реально нажмёт
-    // «Сделать шакально» (см. ensureFFmpeg — там «Загружаю движок FFmpeg...»).
+    // Грузим ТИХО в фоне — без промежуточных статусов на LCD-экране, иначе
+    // после успешной загрузки последний статус («Загружаю util.js...»)
+    // оставался висеть и выглядел как бесконечная загрузка. Статус загрузки
+    // появляется только при реальном нажатии «Обработать» (см. ensureFFmpeg).
     const ffmpegLibsLoaded = (async () => {
       await loadScript(`${VENDOR_BASE}/ffmpeg.js?${ASSET_VERSION}`);
       await loadScript(`${VENDOR_BASE}/ffmpeg-util.js?${ASSET_VERSION}`);
     })();
     ffmpegLibsLoaded.catch((err) => {
       console.error("Не удалось загрузить библиотеки ffmpeg.wasm:", err);
-      // Не показываем ошибку сразу на экране — попробуем ещё раз
-      // лениво при нажатии «Сделать шакально» (см. ensureFFmpeg).
     });
 
-    // setStatus определена ниже после DOM-привязок; на случай если этот
-    // код выполнится раньше — безопасная обёртка без падения.
     function setStatusSafe(html) {
       const el = document.getElementById("lcdStatus");
       if (el) el.innerHTML = html;
     }
-
-
 
     // ── Telegram WebApp ───────────────────────────────────────
     const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
     if (tg) { tg.expand(); tg.ready && tg.ready(); }
 
     // ── Диагностика: показываем любую неотловленную ошибку на LCD-экране ──
-    // Без этого скрипт может "молча" падать (например, если CDN с ffmpeg.wasm
-    // не успел отдать библиотеку), и пользователь просто не видит реакции
-    // после выбора файла — кнопка-то нативная, а вот обработка уже на JS.
     window.addEventListener("error", (e) => {
       const el = document.getElementById("lcdStatus");
       if (el) el.innerHTML = "❌ Скрипт упал: " + (e.message || "неизвестная ошибка");
@@ -374,6 +403,7 @@
     const lcdStatus = $("lcdStatus"), lcdTitle = $("lcdTitle");
     const progressWrap = $("progressWrap"), progressFill = $("progressFill"), progressPct = $("progressPct");
     const fileInput = $("fileInput"), cameraInput = $("cameraInput"), processBtn = $("processBtn");
+    const cancelBtn = $("cancelBtn");
     const filenameEl = $("filename"), resultWrap = $("resultWrap");
     const resultVideo = $("resultVideo"), resultImage = $("resultImage");
     const downloadBtn = $("downloadBtn"), shareBtn = $("shareBtn"), againBtn = $("againBtn");
@@ -387,69 +417,197 @@
     }
 
     // ── Пресеты ───────────────────────────────────────────────
-    // Порядок фильтров: scale → eq → noise (на крошечном кадре — быстро).
-    // Здесь хранятся ТОЛЬКО БАЗОВЫЕ данные пресета:
+    // Поля пресета:
     //   width/height  — целевое разрешение для scale;
-    //   scaleFlags    — алгоритм масштабирования (опц.):
-    //                   "neighbor" (по умолч.) = пиксельный nearest-neighbor,
-    //                   "" = дефолт FFmpeg (плавнее, для Android/Phonk);
-    //   vfPostScale   — видеофильтр ПОСЛЕ scale (eq/noise/vignette), без самого scale;
-    //   audioFilter   — особый аудиофильтр для «сломанного микрофона»
-    //                   (опц.; если нет — берётся DEFAULT_AUDIO_FILTER);
-    //   encodeArgs    — параметры кодирования БЕЗ -vf и -af (видео).
-    // Сама строка -vf (с учётом переключателя «Пропорции») и аргумент -af
-    // (с учётом переключателя «Сломанный микрофон») собираются динамически
-    // в processBtn — см. buildVideoFilter() и DEFAULT_AUDIO_FILTER.
-    // Эта же строка -vf переиспользуется и для фото (см. ветку isImage).
-    const DEFAULT_AUDIO_FILTER = "volume=5,highpass=f=400,lowpass=f=2000,acrusher=bits=5:mode=log";
+    //   scaleFlags    — "neighbor" (пиксельный nearest) по умолч.,
+    //                   "" = плавный дефолт FFmpeg;
+    //   vfPostScale   — видеофильтр ПОСЛЕ scale (без самого scale);
+    //   audioFilter   — особый аудиофильтр «рации» (опц.; иначе DEFAULT_AUDIO_FILTER);
+    //   encodeArgs    — параметры кодирования БЕЗ -vf и -af.
+    // Строка -vf (с учётом переключателя «Пропорции») и -af (с учётом
+    // «Сломанного микрофона») собираются динамически в processBtn — см.
+    // buildVideoFilter() и DEFAULT_AUDIO_FILTER. Та же -vf применяется к фото.
+    const DEFAULT_AUDIO_FILTER = "volume=6,highpass=f=500,lowpass=f=2500,acrusher=bits=4:mode=log,tremolo=f=6:d=0.3";
 
     const PRESETS = {
+      // ════════ ЦИФРОВАЯ ЭПОХА (2000-е) ════════
       q_2007: {
         title: "📱 2007 (классика)",
-        // ИСХОДНЫЙ фильтр из ТЗ: eq=contrast=1.4:brightness=0.15:saturation=1.6,
-        // scale=176:144:flags=neighbor, noise=c0s=30:c1s=40:allf=t — порядок
-        // оптимизирован (scale первым), сами числа не менялись.
+        // Телефон 2007: пиксельный 176×144, перенасыщенные цвета, крупный шум.
         width: 176, height: 144,
         vfPostScale: "eq=contrast=1.4:brightness=0.15:saturation=1.6,noise=c0s=30:c1s=40:allf=t",
         encodeArgs: ["-r", "10", "-c:v", "libx264", "-b:v", "70k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
                      "-ac", "1", "-ar", "8000", "-c:a", "aac", "-b:a", "16k"]
       },
-      q_2010: {
-        title: "📺 2010",
-        width: 320, height: 240,
-        vfPostScale: "eq=contrast=1.25:brightness=0.1:saturation=1.4,noise=c0s=20:c1s=25:allf=t",
-        encodeArgs: ["-r", "15", "-c:v", "libx264", "-b:v", "150k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
+      q_nul: {
+        title: "🕹️ Нулевые",
+        // Цифровик ~2003-2005: тусклая картинка с ОЧЕНЬ сильными пересветами
+        // от источников света (gamma=1.7 выжигает света в белое), CCD-шум.
+        // Звук — хрипящая рация: tremolo + acrusher bits=3.
+        width: 480, height: 360,
+        scaleFlags: "",
+        vfPostScale: "eq=contrast=1.45:gamma=1.7:brightness=-0.06:saturation=1.2,noise=c0s=22:allf=t",
+        audioFilter: "volume=10,highpass=f=600,lowpass=f=3000,acrusher=bits=3:mode=log,tremolo=f=7:d=0.4",
+        encodeArgs: ["-r", "24", "-c:v", "libx264", "-b:v", "250k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
                      "-ac", "1", "-ar", "8000", "-c:a", "aac", "-b:a", "24k"]
       },
-      q_2012: {
-        title: "📱 Android S-2012",
-        // Ранние Android (Galaxy S2/S3): вертикальный кадр, сильный пересвет
-        // от солнца/ламп, лёгкий шум. scaleFlags="" → плавное масштабирование
-        // (как на реальном устройстве), без пиксельного nearest-neighbor.
-        width: 360, height: 640,
+      q_vhs: {
+        title: "📼 VHS",
+        // Ретро-видак: перенасыщенный «расплывшийся» цвет, мягкое размытие
+        // магнитной ленты, зернистый шум. Цветовой дрейф через hue+colorbalance
+        // (chromashift крашил урезанную wasm-сборку — заменён).
+        width: 320, height: 240,
         scaleFlags: "",
-        vfPostScale: "eq=contrast=1.3:brightness=0.25:gamma=1.5:saturation=1.4,noise=c0s=10",
-        // Особо жёсткий эффект рации при включённом «сломанном микрофоне».
-        audioFilter: "volume=8,highpass=f=800,lowpass=f=2500,acrusher=bits=4:mode=log",
-        encodeArgs: ["-r", "24", "-c:v", "libx264", "-b:v", "250k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
-                     "-c:a", "aac", "-b:a", "24k"]
+        vfPostScale: "eq=contrast=1.1:saturation=1.4:brightness=0.03,hue=h=4:s=1.05,colorbalance=rs=0.04:gs=0.02:bs=-0.04,boxblur=1:1,noise=c0s=28:c1s=20:allf=t",
+        encodeArgs: ["-r", "24", "-c:v", "libx264", "-b:v", "200k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
+                     "-ac", "1", "-ar", "11025", "-c:a", "aac", "-b:a", "24k"]
       },
-     q_phonk: {
+      q_phonk: {
         title: "🌃 Phonk",
-        args: ["-vf", "scale=320:426:flags=neighbor,eq=contrast=1.5:brightness=0.15:gamma=1.4:saturation=1.3:gamma_g=1.1,unsharp=5:5:1.5,noise=c0s=45:c1s=30:allf=t",
-               "-r", "24", "-c:v", "libx264", "-b:v", "250k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
-               "-ac", "1", "-ar", "8000", "-c:a", "aac", "-b:a", "24k"]
-      }
+        // JDM/drift night: дёрзкая резкость, лёгкий зелёный в тенях. Зерно
+        // умеренное (18/12) — 45/30 было перебором. Виньетки НЕТ (круг на фото).
+        width: 320, height: 426,
+        vfPostScale: "eq=contrast=1.5:brightness=0.15:gamma=1.4:saturation=1.3:gamma_g=1.1,unsharp=5:5:1.5,noise=c0s=18:c1s=12:allf=t",
+        encodeArgs: ["-r", "24", "-c:v", "libx264", "-b:v", "300k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
+                     "-c:a", "aac", "-b:a", "32k"]
+      },
+
+      // ════════ ПЛЁНОЧНАЯ ЭПОХА (XX век) ════════
+      q_kino: {
+        title: "📷 Кино 80-х",
+        // Мягкая плёночная киноплёнка: матовые тени, teal-колоргрейд в тенях,
+        // тёплые света. Без зерна, чистый кинематографичный кадр.
+        width: 480, height: 640,
+        scaleFlags: "",
+        vfPostScale: "eq=contrast=1.05:brightness=0.06:gamma=0.92:saturation=1.1,colorbalance=rs=-0.10:gs=0.03:bs=0.10:rh=0.05:gh=-0.02:bh=-0.04",
+        encodeArgs: ["-r", "24", "-c:v", "libx264", "-b:v", "350k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
+                     "-c:a", "aac", "-b:a", "48k"]
+      },
+      q_pol: {
+        title: "🔆 Полароид",
+        // Мгновенная печать Polaroid: выбеленная картинка с поднятыми тенями
+        // (подъём яркости + низкий контраст), тёплый молочный оттенок
+        // (colorbalance в красный/зелёный), лёгкое зерно плёнки.
+        width: 480, height: 480,
+        scaleFlags: "",
+        vfPostScale: "eq=contrast=0.85:brightness=0.12:saturation=0.9:gamma=0.95,colorbalance=rs=0.08:gs=0.05:bs=-0.06:rh=0.05,noise=c0s=12:allf=t",
+        encodeArgs: ["-r", "24", "-c:v", "libx264", "-b:v", "300k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
+                     "-c:a", "aac", "-b:a", "48k"]
+      },
+      q_koda: {
+        title: "🎞️ Kodak 70-х",
+        // Kodak Kodachrome: насыщенный тёплый плёночный вид (фирменный
+        // красно-жёлтый сдвиг), приподнятый контраст, среднее зерно.
+        width: 480, height: 360,
+        scaleFlags: "",
+        vfPostScale: "eq=contrast=1.2:saturation=1.35:brightness=0.04,hue=h=-2,colorbalance=rs=0.06:rh=0.05:gs=0.02:bh=-0.04,noise=c0s=18:allf=t",
+        encodeArgs: ["-r", "24", "-c:v", "libx264", "-b:v", "320k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
+                     "-c:a", "aac", "-b:a", "48k"]
+      },
+      q_super8: {
+        title: "📽️ Super 8",
+        // Любительская киноплёнка Super 8: дёрганая, выцветшая, с крупным
+        // зерном и тёплым выцветшим оттенком. Низкое разрешение, сильный шум.
+        width: 360, height: 270,
+        scaleFlags: "",
+        vfPostScale: "eq=contrast=1.15:brightness=0.05:saturation=0.8:gamma=1.05,colorbalance=rs=0.05:rh=0.04:bs=-0.03,boxblur=1:1,noise=c0s=35:c1s=25:allf=t",
+        encodeArgs: ["-r", "16", "-c:v", "libx264", "-b:v", "220k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
+                     "-c:a", "aac", "-b:a", "32k"]
+      },
+
+      // ════════ АРХИВНАЯ / Ч-Б ЭПОХА (до 1960) ════════
+      q_sepia: {
+        title: "📜 Сепия",
+        // Классическая сепия XIX–начала XX в.: десатурация + тёплый
+        // коричневый оттенок через colorbalance (красный+зелёный в тенях).
+        // Грубое зерно старой бумаги.
+        width: 480, height: 360,
+        scaleFlags: "",
+        vfPostScale: "eq=contrast=1.1:brightness=0.03:saturation=0.25,colorbalance=rs=0.35:gs=0.20:bs=-0.10:rh=0.15:gh=0.05,noise=c0s=22:allf=t",
+        encodeArgs: ["-r", "24", "-c:v", "libx264", "-b:v", "280k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
+                     "-c:a", "aac", "-b:a", "48k"]
+      },
+      q_doc: {
+        title: "🗂️ Рассекречено",
+        // Вайб рассекреченного фото из архива: десатурация (почти ч/б) с
+        // холодным зеленовато-серым оттенком, сильное зерно, контрастность
+        // старой фотобумаги. Лёгкая резкость для «документального» вида.
+        width: 360, height: 270,
+        scaleFlags: "",
+        vfPostScale: "eq=contrast=1.35:brightness=-0.04:saturation=0.15:gamma=1.05,colorbalance=gs=0.05:bs=0.04:rs=-0.02,unsharp=3:3:0.8,noise=c0s=30:c1s=22:allf=t",
+        encodeArgs: ["-r", "24", "-c:v", "libx264", "-b:v", "240k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
+                     "-c:a", "aac", "-b:a", "48k"]
+      },
+      q_bw: {
+        title: "⚫⚪ Ч/Б 50-х",
+        // Чистый чёрно-белый фоторепортажный стиль 1950-х: высокий контраст,
+        // полная десатурация, резкие тени, среднее зерно.
+        width: 480, height: 360,
+        scaleFlags: "",
+        vfPostScale: "eq=contrast=1.4:brightness=0.02:saturation=0:gamma=1.05,unsharp=3:3:0.6,noise=c0s=20:allf=t",
+        encodeArgs: ["-r", "24", "-c:v", "libx264", "-b:v", "300k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
+                     "-c:a", "aac", "-b:a", "48k"]
+      },
+      q_nego: {
+        title: "🔘 Негатив",
+        // Фотоплёнка-негатив: инверсия яркости и цвета. Раньше тут был
+        // colorchannelmixer=rr=-1:... — он давал ОТРИЦАТЕЛЬНЫЕ значения,
+        // которые FFmpeg прижимает к 0 = чёрный экран. Правильный фильтр
+        // для инверсии — negate (есть в любой сборке). Поверх — лёгкое зерно.
+        width: 480, height: 360,
+        scaleFlags: "",
+        vfPostScale: "negate,eq=contrast=1.1:saturation=1.1,noise=c0s=14:allf=t",
+        encodeArgs: ["-r", "24", "-c:v", "libx264", "-b:v", "280k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
+                     "-c:a", "aac", "-b:a", "48k"]
+      },
+
+      // ════════ РАННЯЯ ФОТОГРАФИЯ (до 1900) ════════
+      q_dag: {
+        title: "🪙 Дагерреотип",
+        // Самая ранняя фотография (1839+): зеркальная серебряная пластина,
+        // выцветший низкоконтрастный вид, грубое зерно, холодный металлический
+        // оттенок. Мягкое размытие оптики того времени.
+        width: 360, height: 360,
+        scaleFlags: "",
+        vfPostScale: "eq=contrast=0.9:brightness=0.02:saturation=0.12:gamma=1.08,colorbalance=bs=0.06:gs=0.03:rs=-0.03,boxblur=1:1,noise=c0s=32:c1s=24:allf=t",
+        encodeArgs: ["-r", "16", "-c:v", "libx264", "-b:v", "220k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
+                     "-c:a", "aac", "-b:a", "32k"]
+      },
+      q_salt: {
+        title: "📜 Соляная печать",
+        // Соляные отпечатки 1850-х: очень мягкая, матовая, рыжевато-коричневая
+        // картинка с низким контрастом и грубой текстурой бумаги.
+        width: 360, height: 360,
+        scaleFlags: "",
+        vfPostScale: "eq=contrast=0.8:brightness=0.06:saturation=0.18:gamma=0.95,colorbalance=rs=0.18:gs=0.10:bs=-0.08:rh=0.06,boxblur=2:1,noise=c0s=26:allf=t",
+        encodeArgs: ["-r", "16", "-c:v", "libx264", "-b:v", "200k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
+                     "-c:a", "aac", "-b:a", "32k"]
+      },
+      q_arch: {
+        title: "🏛️ Архив",
+        // Перенесено из Lightroom-пресета (IMG_3754.xmp): холодный
+        // приглушённый кинематографичный вид. Настройки из XMP:
+        //   Temperature -7, Tint -4 → холодный через colorbalance (bs+, gs+);
+        //   Exposure -0.73 + Contrast +17 + Whites -47 → пониженная яркость,
+        //     но высокий контраст через eq (brightness -0.05, contrast 1.25);
+        //   Shadows -77 → глубокие тени (без подъёма, контраст выше);
+        //   Vibrance -3 → слегка приглушённая насыщенность (saturation 0.95);
+        //   Tone curve (5/23, 93/103, 179/196, 255/255) → матовый вид через
+        //     eq gamma=0.95 (аналог S-кривой, curves не используем — крашило wasm);
+        //   Grain=19, Size=25 → умеренное зерно (noise c0s=20).
+        width: 480, height: 640,
+        scaleFlags: "",
+        vfPostScale: "eq=contrast=1.25:brightness=-0.05:gamma=0.95:saturation=0.95,colorbalance=gs=0.03:bs=0.08:rh=0.03:rs=-0.02,noise=c0s=20:allf=t",
+        encodeArgs: ["-r", "24", "-c:v", "libx264", "-b:v", "350k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
+                     "-c:a", "aac", "-b:a", "48k"]
       }
     };
     let currentPreset = "q_2007";
 
     // ── Переключатель «Пропорции» ─────────────────────────────
-    // squash    → scale=W:H[:flags=neighbor] (старое поведение, сплющивает кадр)
-    // original  → scale=W:H:force_original_aspect_ratio=decrease[:flags=...],
-    //             pad=W:H:(ow-iw)/2:(oh-ih)/2 (сохраняет пропорции, добивает чёрным)
-    // Применяется ОДИНАКОВО к видео и к фото — ветвления нет, строится
-    // одна строка -vf, которую подхватывают оба пути в processBtn.
+    // squash   → scale=W:H[:flags] (сплющивает кадр на весь прямоугольник)
+    // original → scale+pad (сохраняет пропорции, добивает чёрным)
+    // Работает одинаково для видео и фото — строится одна строка -vf.
     let aspectMode = "squash";
 
     document.querySelectorAll(".toggle-opt[data-aspect]").forEach(b => {
@@ -461,11 +619,9 @@
     });
 
     // ── Переключатель «Сломанный микрофон» ────────────────────
-    // on  → добавляем -af с хрипящим аудиофильтром поверх базового -c:a/-b:a.
-    //       Фильтр берётся из пресета (preset.audioFilter) или DEFAULT_AUDIO_FILTER.
-    // off → используем только базовое сжатие звука из пресета, без -af.
-    // Внимание: влияет ТОЛЬКО на видео (у фото нет звуковой дорожки) —
-    // в ветке isImage -af вообще не формируется.
+    // on  → добавляем -af (из пресета или DEFAULT_AUDIO_FILTER).
+    // off → только базовое сжатие из пресета (-c:a/-b:a).
+    // Влияет ТОЛЬКО на видео: у фото нет звука, -af там не формируется.
     let micEffectOn = true;
 
     document.querySelectorAll(".toggle-opt[data-mic]").forEach(b => {
@@ -477,8 +633,6 @@
     });
 
     // Собирает финальную строку -vf для текущего пресета с учётом aspectMode.
-    // scaleFlags из пресета (по умолчанию "neighbor") управляет алгоритмом:
-    //   neighbor = пиксельный nearest-neighbor, "" = плавный дефолт FFmpeg.
     function buildVideoFilter(preset) {
       const { width: W, height: H, vfPostScale } = preset;
       const flags = preset.scaleFlags === undefined ? "neighbor" : preset.scaleFlags;
@@ -498,25 +652,9 @@
     });
 
     // ── ffmpeg.wasm ───────────────────────────────────────────
-    // ВАЖНО: не деструктурируем глобалы на этапе загрузки скрипта.
-    // Если CDN ещё не успел отдать/выполнить ffmpeg.js или util.js
-    // (медленная сеть, временный сбой unpkg, кеш WebView и т.п.),
-    // обращение к FFmpegWASM/FFmpegUtil здесь бросает ReferenceError
-    // СРАЗУ при разборе всего <script> — и тогда НИ ОДИН обработчик
-    // в файле не навешивается, включая fileInput "change".
-    // Поэтому проверяем их наличие лениво, внутри ensureFFmpeg().
-    // ВАЖНО: core-файлы (ffmpeg-core.js/.wasm) тоже лежат в vendor/ —
-    // см. константу VENDOR_BASE и комментарий выше про состав папки.
-    //
-    // ffmpeg-core.wasm весит ~31 МБ — это больше лимита GitHub на загрузку
-    // файла через веб-форму (25 МБ). Поэтому сам .wasm разбит на части
-    // (ffmpeg-core.wasm.part00, .part01 — каждая < 25 МБ) и собирается
-    // обратно в браузере через fetch + конкатенацию ArrayBuffer, прежде
-    // чем передать его в ffmpeg.load(). Если понадобится больше частей —
-    // просто добавь их имена в массив WASM_PARTS ниже.
     const WASM_PARTS = ["ffmpeg-core.wasm.part00", "ffmpeg-core.wasm.part01"];
 
-    async function loadWasmFromParts(basePathIgnored) {
+    async function loadWasmFromParts() {
       const buffers = [];
       let totalLen = 0;
       for (const partName of WASM_PARTS) {
@@ -529,7 +667,6 @@
         buffers.push(buf);
         totalLen += buf.byteLength;
       }
-      // Склеиваем все части в один непрерывный буфер.
       const merged = new Uint8Array(totalLen);
       let offset = 0;
       for (const buf of buffers) {
@@ -549,11 +686,8 @@
 
       setStatus('<span class="spinner"></span>Загружаю движок FFmpeg (~25 МБ, один раз)...');
       processBtn.disabled = true;
+      cancelBtn.disabled = true;
 
-      // Ждём результат фоновой загрузки скриптов, начатой при старте страницы.
-      // Если она ещё не завершилась — подождём её здесь; если упала —
-      // пробуем загрузить ещё раз (например, первая попытка совпала с
-      // моментом, когда WebView ещё не успел открыть локальные ресурсы).
       let lastLoadErr = null;
       try {
         await ffmpegLibsLoaded;
@@ -571,11 +705,8 @@
         const reason = lastLoadErr ? lastLoadErr.message : "библиотеки не определены после загрузки";
         throw new Error(
           "Не загрузился движок FFmpeg: " + reason + ". " +
-          "Проверь, что папка vendor/ (с файлами ffmpeg.js, 814.ffmpeg.js, " +
-          "ffmpeg-util.js, ffmpeg-core.js, ffmpeg-core.wasm.part00, " +
-          "ffmpeg-core.wasm.part01) загружена на хостинг рядом с index.html. " +
-          "Открывать страницу напрямую с диска (file://) не получится — " +
-          "нужен HTTP(S)-хостинг (например, GitHub Pages)."
+          "Проверь, что папка vendor/ (ffmpeg.js, 814.ffmpeg.js, ffmpeg-util.js, " +
+          "ffmpeg-core.js, ffmpeg-core.wasm.part00, ffmpeg-core.wasm.part01) лежит рядом с index.html."
         );
       }
       const { FFmpeg } = FFmpegWASM;
@@ -583,24 +714,21 @@
       const { toBlobURL } = FFmpegUtil;
 
       ffmpeg = new FFmpeg();
-      // Прогресс с этапа загрузки ядра не привязан — используем «log» как индикатор жизни.
       ffmpeg.on("log", ({ message }) => {
-        // Показываем короткие строки лога, чтобы экран «жил».
         if (message && message.length < 60) setStatus("⚙️ " + message);
       });
 
       let coreURL, wasmURL;
       try {
         coreURL = await toBlobURL(`${VENDOR_BASE}/ffmpeg-core.js?${ASSET_VERSION}`, "text/javascript");
-        wasmURL = await loadWasmFromParts(`${VENDOR_BASE}/ffmpeg-core.wasm`);
+        wasmURL = await loadWasmFromParts();
       } catch (err) {
         console.error(err);
         throw new Error(
           "Не удалось загрузить ffmpeg-core.js/.wasm из папки vendor/. " +
-          "Проверь, что все файлы (включая .part00/.part01) загружены на хостинг рядом с index.html."
+          "Проверь, что все файлы (включая .part00/.part01) загружены рядом с index.html."
         );
       }
-
 
       await ffmpeg.load({ coreURL, wasmURL });
       ffmpegReady = true;
@@ -609,20 +737,15 @@
 
     // ── Выбор файла (галерея ИЛИ камера — одна логика) ────────
     let selectedFile = null;
-    let selectedDuration = 0;
+    let isProcessing = false;
 
-    // Кнопки выбора файла реализованы как <label for="..."> — это нативный
-    // браузерный механизм, который надёжно открывает системный выбор файла
-    // на iOS/Android внутри Telegram WebView (где программный .click() часто
-    // блокируется). Поэтому тут НЕТ обработчиков клика на самих <label>.
-    // Оба скрытых инпута (fileInput из галереи, cameraInput со съёмкой)
-    // кормят файлы в одну и ту же handleFileSelected.
-
+    // Кнопки выбора файла — это <label for="...">: нативный механизм,
+    // надёжно открывает выбор файла в Telegram WebView. Оба скрытых
+    // инпута кормят файлы в одну handleFileSelected.
     function handleFileSelected(e) {
       const file = e.target.files && e.target.files[0];
       if (!file) return;
 
-      // Лимит размера
       const MAX_BYTES = 100 * 1024 * 1024; // 100 МБ
       if (file.size > MAX_BYTES) {
         setStatus("❌ Файл слишком большой (лимит 100 МБ).");
@@ -635,52 +758,86 @@
       filenameEl.textContent = icon + " " + file.name + "  ·  " + mbSize + " МБ";
 
       processBtn.disabled = false;
+      cancelBtn.disabled = false;
       resultWrap.classList.remove("active");
-      setStatus("Готово к обработке. Жми «Сделать шакально» 🔧");
+      setStatus("Готово к обработке. Жми «Обработать» 🔧");
     }
 
     fileInput.addEventListener("change", handleFileSelected);
     cameraInput.addEventListener("change", handleFileSelected);
 
+    // ── Отмена выбора ─────────────────────────────────────────
+    // Сбрасывает выбранный файл в стартовое состояние без перезапуска
+    // приложения: чистит оба инпута, блокирует «Обработать» и саму «Отмену»,
+    // прячет результат. Используется и кнопкой «Отмена», и «Ещё раз».
+    function resetSelection(showResult) {
+      selectedFile = null;
+      fileInput.value = "";
+      cameraInput.value = "";
+      filenameEl.textContent = "—";
+      processBtn.disabled = true;
+      cancelBtn.disabled = true;
+      setTitle("ВЕРНИСЬ В 2007-Й");
+      setStatus("Выбери фото или видео и верни его в эпоху пикселей");
+
+      if (showResult !== false) {
+        resultWrap.classList.remove("active");
+        progressWrap.classList.remove("active");
+        setProgress(0);
+      }
+      // Чистим оба медиа-тега результата и портретный режим.
+      resultVideo.classList.remove("portrait");
+      resultImage.classList.remove("portrait");
+      resultVideo.removeAttribute("src");
+      resultImage.removeAttribute("src");
+      resultVideo.style.display = "";
+      resultImage.style.display = "none";
+      lastBlob = null;
+    }
+
+    cancelBtn.addEventListener("click", () => {
+      if (isProcessing) return;
+      resetSelection();
+    });
+
     // ── Обработка ─────────────────────────────────────────────
     processBtn.addEventListener("click", async () => {
       if (!selectedFile) return;
+      isProcessing = true;
       resultWrap.classList.remove("active");
       progressWrap.classList.add("active");
       setProgress(0);
       setTitle("ПРЕВРАЩАЮ В ПИКСЕЛИ");
+      processBtn.disabled = true;
+      cancelBtn.disabled = true;
 
-      // Тип исходника определяет ВСЁ дальше: имя выхода (.mp4/.jpg),
-      // набор аргументов FFmpeg и то, какой тег показать в результате.
+      // Тип исходника определяет имя выхода, набор аргументов и тег результата.
       const isImage = selectedFile.type.startsWith("image/");
 
       try {
         const ff = await ensureFFmpeg();
 
+        // Пред-уменьшаем большие фото через <canvas>, чтобы не словить
+        // «memory access out of bounds» в wasm (фото с камеры 12–48 МП).
+        // isImage определяем по ИСХОДНОМУ файлу (тип не меняется при ресайзе).
         setStatus("📥 Читаю файл...");
-        const inName = "input" + getExt(selectedFile.name);
-        const outName = isImage ? "output.jpg" : "output.mp4";
-        await ff.writeFile(inName, await fetchFile(selectedFile));
+        const fileToProcess = await maybeShrinkImage(selectedFile);
 
-        // Прогресс привязан к обработке (0..1).
+        const inName = "input" + getExt(fileToProcess.name);
+        const outName = isImage ? "output.jpg" : "output.mp4";
+        await ff.writeFile(inName, await fetchFile(fileToProcess));
+
         const progressHandler = ({ progress }) => setProgress(progress);
         ff.on("progress", progressHandler);
 
         setStatus("⚙️ Кодирую... телефон старается изо всех сил");
 
         // ── Сборка аргументов FFmpeg ──────────────────────────
-        // -vf собирается динамически через buildVideoFilter() с учётом
-        // переключателя «Пропорции» (squash = старый scale без сохранения
-        // пропорций, original = scale + pad с чёрными полосами) и scaleFlags
-        // из пресета. ЭТА ЖЕ строка -vf применяется и к фото.
-        //
-        // ВИДЕО: -i input + [-vf] + [-af если микрофон вкл] + encodeArgs + output
-        //   -af добавляется только если включён «Сломанный микрофон» — фильтр
-        //   берётся из пресета (audioFilter) или DEFAULT_AUDIO_FILTER.
-        // ФОТО: -i input + [-vf] + -frames:v 1 + output.jpg
-        //   Никаких кодеков звука (-c:a/-af), FPS (-r) или битрейта видео
-        //   (-b:v): у кадра нет потока и битрейта, JPEG кодируется дефолтным
-        //   энкодером. Только видеофильтр + ровно один кадр на выход.
+        // ВИДЕО: -i + [-vf] + [-af если микрофон вкл] + encodeArgs + output
+        // ФОТО:  -i + [-vf] + -frames:v 1 + output.jpg
+        //   (никаких -c:a/-af, -r, -b:v — у одного кадра нет потока/битрейта).
+        // Строка -vf одна и та же, строится через buildVideoFilter() с учётом
+        // переключателя «Пропорции» — поэтому он работает и для фото, и для видео.
         const preset = PRESETS[currentPreset];
         const vfArgs = ["-vf", buildVideoFilter(preset)];
 
@@ -717,11 +874,9 @@
         setTitle("✓ ГОТОВО");
         setStatus("📱 " + PRESETS[currentPreset].title + " — готов! Сохрани или отправь.");
 
-        // Прокрутка к результату.
         resultWrap.scrollIntoView({ behavior: "smooth", block: "nearest" });
 
-        // Запоминаем blob для кнопок скачивания/шаринга. Тип (.mp4/.jpg)
-        // выводим из lastBlob.type в самих кнопках — отдельный флаг не нужен.
+        // Тип (.mp4/.jpg) выводим из lastBlob.type в кнопках скачивания/шаринга.
         lastBlob = blob;
         lastFileName = "shkal_" + Date.now() + (isImage ? ".jpg" : ".mp4");
       } catch (err) {
@@ -729,7 +884,10 @@
         setStatus("❌ Ошибка обработки: " + (err && err.message ? err.message : err));
         setTitle("ОШИБКА");
       } finally {
-        processBtn.disabled = false;
+        isProcessing = false;
+        // Если файл всё ещё выбран — «Отмена» снова доступна.
+        cancelBtn.disabled = !selectedFile;
+        processBtn.disabled = !selectedFile;
       }
     });
 
@@ -738,9 +896,46 @@
       return m ? "." + m[1].toLowerCase() : ".mp4";
     }
 
-    // Показывает нужный медиа-тег в блоке результата и прячет второй.
-    // isImage=true → <img>, иначе <video>. Второй тег зачищается
-    // (убираем src + прячем), чтобы он не висел невидимым «грузилом».
+    // ── Пред-уменьшение больших фото ──────────────────────────
+    // Главная причина «RuntimeError: memory access out of bounds» в
+    // ffmpeg.wasm — это фото с камеры телефона (12–48 МП). При декодировании
+    // в RGBA такой кадр занимает десятки МБ, и вместе с буферами фильтров
+    // линейная память wasm переполняется. Решение: уменьшаем фото через
+    // <canvas> ДО подачи в ffmpeg — этого достаточно даже для максимального
+    // пресета 480px по большей стороне. Для видео ничего не делаем (там
+    // ffmpeg стримит кадры по одному и пиковой нагрузки нет).
+    const IMG_MAX_DIM = 1280; // ограничение по большей стороне (с запасом)
+
+    function maybeShrinkImage(file) {
+      return new Promise((resolve) => {
+        if (!file.type.startsWith("image/")) return resolve(file);
+        const img = new Image();
+        const url = URL.createObjectURL(file);
+        img.onload = () => {
+          URL.revokeObjectURL(url);
+          const maxSide = Math.max(img.naturalWidth, img.naturalHeight);
+          // Если фото и так небольшое — отдаём как есть, без перекодирования.
+          if (maxSide <= IMG_MAX_DIM) return resolve(file);
+
+          const scale = IMG_MAX_DIM / maxSide;
+          const w = Math.round(img.naturalWidth * scale);
+          const h = Math.round(img.naturalHeight * scale);
+          const canvas = document.createElement("canvas");
+          canvas.width = w; canvas.height = h;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, w, h);
+          canvas.toBlob((blob) => {
+            if (!blob) return resolve(file);
+            // Сохраняем исходное расширение/тип, чтобы getExt отработал верно.
+            resolve(new File([blob], file.name, { type: file.type, lastModified: Date.now() }));
+          }, file.type === "image/png" ? "image/png" : "image/jpeg", 0.92);
+        };
+        img.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
+        img.src = url;
+      });
+    }
+
+    // Показывает нужный медиа-тег и прячет второй.
     function showResultMedia(isImage, blobUrl) {
       if (isImage) {
         resultVideo.pause && resultVideo.pause();
@@ -756,11 +951,8 @@
       }
     }
 
-    // Переключает портретный режим превью по реальной геометрии готового
-    // файла (а не по пресету) — это источник истины: сработает для любого
-    // пресета, режима «Пропорции» и для обоих типов (видео/фото). Класс
-    // .portrait делает медиа узким и высоким, по центру — без чёрных полос
-    // по бокам и без растягивания.
+    // Портретный режим по реальной геометрии готового файла — источник
+    // истины для любого пресета, режима «Пропорции» и типа (видео/фото).
     function applyResultOrientation(isImage) {
       const mediaEl = isImage ? resultImage : resultVideo;
       mediaEl.classList.remove("portrait");
@@ -769,8 +961,6 @@
         const h = isImage ? resultImage.naturalHeight : resultVideo.videoHeight;
         if (h > w) mediaEl.classList.add("portrait");
       };
-      // Метаданные уже могут быть загружены — тогда размеры доступны сразу;
-      // иначе ждём событие (load для <img>, loadedmetadata для <video>).
       if (isImage) {
         if (resultImage.naturalWidth && resultImage.naturalHeight) {
           apply();
@@ -801,34 +991,25 @@
 
     shareBtn.addEventListener("click", async () => {
       if (!lastBlob) return;
-      // Тип файла (image/jpeg или video/mp4) берём прямо из блоба — так
-      // шаринг корректно отдаёт .jpg для фото и .mp4 для видео.
+      // Тип (image/jpeg или video/mp4) берём из блоба — шаринг корректно
+      // отдаёт .jpg для фото и .mp4 для видео.
       const mime = lastBlob.type || "video/mp4";
       const file = new File([lastBlob], lastFileName, { type: mime });
 
-      // Web Share API с файлами — открывает системную панель "Поделиться"
-      // (на Android/iOS там может быть и Telegram). ВАЖНО: внутри Telegram
-      // WebView эта функция почти всегда недоступна или не поддерживает
-      // файлы — это ограничение платформы, не баг. Прямой отправки файла
-      // из Mini App в чат бота вообще не существует в Telegram API:
-      // tg.sendData() передаёт только текст до 4096 байт, файлы через
-      // него отправить нельзя физически.
       const canUseWebShare = !!(navigator.canShare && navigator.canShare({ files: [file] }));
       console.log("Web Share с файлами доступен:", canUseWebShare);
 
       if (canUseWebShare) {
         try {
           await navigator.share({ files: [file], title: "Шакал 2007", text: "📱 2007 позвонил..." });
-          return; // пользователь успешно поделился (или закрыл панель)
+          return;
         } catch (e) {
           console.warn("navigator.share упал:", e && e.name, e && e.message);
-          if (e && e.name === "AbortError") return; // сам отменил выбор — не считаем ошибкой
-          // Любая другая ошибка — едем дальше на запасной вариант ниже.
+          if (e && e.name === "AbortError") return;
         }
       }
 
-      // Запасной и единственный надёжный вариант: скачать файл, затем
-      // прикрепить его в Telegram вручную (1-2 нажатия пользователем).
+      // Запасной вариант: скачать файл и прикрепить в Telegram вручную.
       setTitle("💾 Сохранено");
       setStatus(
         "Telegram не даёт Mini App отправлять файлы напрямую в чат — это его " +
@@ -838,27 +1019,8 @@
       downloadBtn.click();
     });
 
-
     againBtn.addEventListener("click", () => {
-      resultWrap.classList.remove("active");
-      progressWrap.classList.remove("active");
-      setProgress(0);
-      setTitle("ВЕРНИСЬ В 2007-Й");
-      setStatus("Выбери новое фото или видео");
-      selectedFile = null;
-      fileInput.value = "";
-      cameraInput.value = "";
-      filenameEl.textContent = "—";
-      processBtn.disabled = true;
-      // Сбрасываем оба тега результата и портретный режим, чтобы они
-      // не остались от прошлого файла.
-      resultVideo.classList.remove("portrait");
-      resultImage.classList.remove("portrait");
-      resultVideo.removeAttribute("src");
-      resultImage.removeAttribute("src");
-      resultVideo.style.display = "";
-      resultImage.style.display = "none";
-      lastBlob = null;
+      resetSelection();
     });
   })();
   </script>
