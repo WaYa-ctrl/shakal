@@ -204,6 +204,46 @@
     .hidden-input { display: none; }
     .spinner { display:inline-block; width:12px; height:12px; border:2px solid rgba(255,255,255,.3); border-top-color:#fff; border-radius:50%; animation: spin .7s linear infinite; vertical-align: middle; margin-right:6px;}
     @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Очередь файлов ──────────────────────────────────────── */
+    .queue-wrap { display:none; margin-bottom: 12px; }
+    .queue-wrap.active { display:block; }
+    .queue-header {
+      display:flex; align-items:center; justify-content: space-between;
+      font-size: 11px; font-weight:bold; color: #9fb2c4;
+      margin-bottom: 6px;
+    }
+    .queue-header .queue-count { color: #7CFC00; }
+    .queue-list {
+      max-height: 180px; overflow-y: auto;
+      display:flex; flex-direction: column; gap: 5px;
+    }
+    .queue-item {
+      display:flex; align-items:center; gap: 8px;
+      background: #1a232c; border: 1px solid #3a4654;
+      border-radius: 7px; padding: 7px 9px;
+      font-size: 11px; color: #cfe8ff; line-height: 1.3;
+    }
+    .queue-item.done { border-color: #2a5a2a; opacity: .75; }
+    .queue-item.error { border-color: #5a2a2a; opacity: .75; }
+    .queue-item.processing { border-color: #7CFC00; box-shadow: 0 0 8px rgba(124,252,0,.2); }
+    .queue-item-icon { font-size: 14px; flex-shrink: 0; }
+    .queue-item-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .queue-item-size { color: #9fb2c4; font-size: 10px; flex-shrink: 0; }
+    .queue-item-status { font-size: 10px; flex-shrink: 0; min-width: 32px; text-align: right; }
+    .queue-item.done .queue-item-status { color: #7CFC00; }
+    .queue-item.error .queue-item-status { color: #ff6b6b; }
+    .queue-item.processing .queue-item-status { color: #7CFC00; }
+    .queue-item-remove {
+      background: none; border: none; color: #ff6b6b;
+      cursor: pointer; font-size: 15px; line-height: 1;
+      padding: 0 2px; flex-shrink: 0; opacity: .6;
+    }
+    .queue-item-remove:hover { opacity: 1; }
+    .queue-item.done .queue-item-remove,
+    .queue-item.processing .queue-item-remove { display: none; }
+    .queue-add-row { margin-top: 6px; }
+    .queue-add-row .btn { margin-top: 0; font-size: 12px; padding: 10px; }
   </style>
 </head>
 <body>
@@ -271,10 +311,24 @@
       </div>
     </div>
 
+    <!-- Очередь файлов: показывается, когда выбран ≥1 файл.
+         Из галереи можно добавить несколько (multiple), камера — по одному. -->
+    <div class="queue-wrap" id="queueWrap">
+      <div class="queue-header">
+        <span>📋 Очередь <span class="queue-count" id="queueCount"></span></span>
+        <span style="font-weight:normal; opacity:.6; font-size:10px;">emoji-icon = выбранный пресет</span>
+      </div>
+      <div class="queue-list" id="queueList"></div>
+      <div class="queue-add-row">
+        <button class="btn secondary" id="addMoreBtn">➕ Добавить ещё файлы</button>
+      </div>
+    </div>
+
     <!-- Два способа выбрать исходник: из галереи или снять камерой.
-         Оба скрытых <input> ведут в одну логику (handleFileSelected). -->
-    <input type="file" id="fileInput" class="hidden-input" accept="video/*, image/*" />
-    <input type="file" id="cameraInput" class="hidden-input" accept="video/*, image/*" capture="environment" />
+         Из галереи поддерживается множественный выбор (multiple). -->
+    <input type="file" id="fileInput" class="hidden-input" accept="video/*, image/*" multiple />
+    <input type="file" id="cameraInput" class="hidden-input" accept="video/*, image/*" multiple capture="environment" />
+    <input type="file" id="queueAddInput" class="hidden-input" accept="video/*, image/*" multiple />
     <label for="fileInput" class="btn secondary">📁 Из галереи</label>
     <label for="cameraInput" class="btn secondary">📸 Снять сейчас</label>
 
@@ -411,6 +465,8 @@
     const filenameEl = $("filename"), resultWrap = $("resultWrap");
     const resultVideo = $("resultVideo"), resultImage = $("resultImage");
     const downloadBtn = $("downloadBtn"), shareBtn = $("shareBtn"), againBtn = $("againBtn");
+    const queueWrap = $("queueWrap"), queueList = $("queueList"), queueCount = $("queueCount");
+    const queueAddInput = $("queueAddInput"), addMoreBtn = $("addMoreBtn");
 
     function setStatus(t) { lcdStatus.innerHTML = t; }
     function setTitle(t) { lcdTitle.textContent = t; }
@@ -842,12 +898,17 @@
     }
 
     // ── Загрузка PNG-оверлея (для пресетов с overlayFile, напр. q_japan) ──
-    // Кешируем по имени файла, чтобы не качать повторно при смене пресетов
-    // или повторной обработке. Имя в виртуальной FS ffmpeg — фиксированное
-    // ("overlay.png"), независимо от исходного пути в assets/.
-    const loadedOverlays = new Set();
+    // В виртуальной FS ffmpeg используем УНИКАЛЬНОЕ имя для каждого PNG.
+    // ВАЖНО: не кешируем по Set — перезаписываем файл перед КАЖДЫМ запуском.
+    // Раньше кеш приводил к bleed-у: после Japan VHS оверлей оставался в FS,
+    // и ffmpeg.wasm (переиспользующий worker-инстанс между exec) мог подхватить
+    // устаревший [1:v], в итоге Film B&W получал Japan-оверлей и наоборот.
+    function getOverlayFsName(overlayPath) {
+      return overlayPath.split(/[\\/]/).pop() || "overlay.png";
+    }
+
     async function ensureOverlayLoaded(overlayPath) {
-      if (loadedOverlays.has(overlayPath)) return;
+      const fsName = getOverlayFsName(overlayPath);
       const url = `${overlayPath}?${ASSET_VERSION}`;
       const res = await fetch(url);
       if (!res.ok) {
@@ -857,49 +918,176 @@
         );
       }
       const buf = await res.arrayBuffer();
-      await ffmpeg.writeFile("overlay.png", new Uint8Array(buf));
-      loadedOverlays.add(overlayPath);
+      // Удаляем старый файл (если был), затем пишем заново — гарантирует,
+      // что ffmpeg всегда читает свежий оверлей, а не кеш из предыдущего run.
+      try { await ffmpeg.deleteFile(fsName); } catch (_) {}
+      await ffmpeg.writeFile(fsName, new Uint8Array(buf));
     }
 
-    // ── Выбор файла (галерея ИЛИ камера — одна логика) ────────
-    let selectedFile = null;
+    // ── Очередь файлов ────────────────────────────────────────
+    // selectedFiles: массив выбранных файлов. Пользователь может добавить
+    // несколько файлов сразу (input[multiple]) или по одному через камеру.
+    // Каждый файл = { file, id, status: "pending"|"done"|"error", result?: Blob }.
+    // Обработка идёт последовательно (ffmpeg.wasm не поддерживает параллель),
+    // результаты накапливаются в doneEntries для скачивания/шаринга.
+    let selectedFiles = [];
     let isProcessing = false;
+    let fileSeq = 0; // генератор ID для элементов очереди
+
+    // doneEntries: массив { blob, fileName } — успешно обработанные файлы.
+    // Используется кнопками «Сохранить»/«Поделиться» для отдачи одного файла
+    // (если он один) или архива (если несколько).
+    let doneEntries = [];
 
     // Кнопки выбора файла — это <label for="...">: нативный механизм,
-    // надёжно открывает выбор файла в Telegram WebView. Оба скрытых
-    // инпута кормят файлы в одну handleFileSelected.
+    // надёжно открывает выбор файла в Telegram WebView. поддерживает multiple.
+    function isHeicFile(file) {
+      const nameLower = (file.name || "").toLowerCase();
+      return file.type === "image/heic" || file.type === "image/heif" ||
+             nameLower.endsWith(".heic") || nameLower.endsWith(".heif") ||
+             nameLower.endsWith(".heics");
+    }
+
     function handleFileSelected(e) {
-      const file = e.target.files && e.target.files[0];
-      if (!file) return;
+      const files = e.target.files;
+      if (!files || files.length === 0) return;
+      // Очищаем input сразу, чтобы повторный выбор того же файла снова триггерил change.
+      e.target.value = "";
+      addFilesToQueue(files);
+    }
 
+    function addFilesToQueue(fileList) {
       const MAX_BYTES = 100 * 1024 * 1024; // 100 МБ
-      if (file.size > MAX_BYTES) {
-        setStatus("❌ Файл слишком большой (лимит 100 МБ).");
-        return;
+      let added = 0, rejected = 0;
+      for (const file of Array.from(fileList)) {
+        if (file.size > MAX_BYTES) {
+          setStatus(`❌ «${file.name}» слишком большой (лимит 100 МБ), пропущен.`);
+          rejected++;
+          continue;
+        }
+        if (isHeicFile(file)) {
+          setStatus(`❌ «${file.name}» — HEIC не поддерживается. Сохрани как JPEG и выбери снова.`);
+          rejected++;
+          continue;
+        }
+        selectedFiles.push({
+          id: ++fileSeq,
+          file: file,
+          status: "pending"
+        });
+        added++;
       }
+      if (added > 0) {
+        resultWrap.classList.remove("active");
+        renderQueue();
+        updateQueueUI();
+        const w = added === 1 ? "файл" : (added < 5 ? "файла" : "файлов");
+        setStatus(`Добавлено ${added} ${w}. Жми «Обработать» 🔧`);
+      }
+    }
 
-      selectedFile = file;
-      const mbSize = (file.size / (1024 * 1024)).toFixed(1);
-      const icon = file.type.startsWith("image/") ? "🖼️" : "🎬";
-      filenameEl.textContent = icon + " " + file.name + "  ·  " + mbSize + " МБ";
+    function renderQueue() {
+      queueList.innerHTML = "";
+      for (const entry of selectedFiles) {
+        const item = document.createElement("div");
+        item.className = "queue-item" +
+          (entry.status === "done" ? " done" : "") +
+          (entry.status === "error" ? " error" : "") +
+          (entry.status === "processing" ? " processing" : "");
+        item.dataset.id = entry.id;
 
-      processBtn.disabled = false;
-      cancelBtn.disabled = false;
-      resultWrap.classList.remove("active");
-      setStatus("Готово к обработке. Жми «Обработать» 🔧");
+        const isImage = entry.file.type.startsWith("image/");
+        const icon = document.createElement("span");
+        icon.className = "queue-item-icon";
+        icon.textContent = isImage ? "🖼️" : "🎬";
+
+        const name = document.createElement("span");
+        name.className = "queue-item-name";
+        name.textContent = entry.file.name;
+
+        const size = document.createElement("span");
+        size.className = "queue-item-size";
+        size.textContent = (entry.file.size / (1024 * 1024)).toFixed(1) + " МБ";
+
+        const status = document.createElement("span");
+        status.className = "queue-item-status";
+        if (entry.status === "done") status.textContent = "✓";
+        else if (entry.status === "error") status.textContent = "✗";
+        else if (entry.status === "processing") status.innerHTML = '<span class="spinner"></span>';
+        else status.textContent = "";
+
+        const remove = document.createElement("button");
+        remove.className = "queue-item-remove";
+        remove.textContent = "×";
+        remove.title = "Убрать из очереди";
+        remove.addEventListener("click", () => removeFromQueue(entry.id));
+
+        item.appendChild(icon);
+        item.appendChild(name);
+        item.appendChild(size);
+        item.appendChild(status);
+        item.appendChild(remove);
+        queueList.appendChild(item);
+      }
+    }
+
+    function updateQueueState(entryId, status) {
+      const entry = selectedFiles.find(f => f.id === entryId);
+      if (!entry) return;
+      entry.status = status;
+      const node = queueList.querySelector(`.queue-item[data-id="${entryId}"]`);
+      if (!node) return;
+      node.className = "queue-item" +
+        (status === "done" ? " done" : "") +
+        (status === "error" ? " error" : "") +
+        (status === "processing" ? " processing" : "");
+      const statusEl = node.querySelector(".queue-item-status");
+      if (statusEl) {
+        if (status === "done") statusEl.textContent = "✓";
+        else if (status === "error") statusEl.textContent = "✗";
+        else if (status === "processing") statusEl.innerHTML = '<span class="spinner"></span>';
+        else statusEl.textContent = "";
+      }
+    }
+
+    function removeFromQueue(id) {
+      if (isProcessing) return;
+      selectedFiles = selectedFiles.filter(f => f.id !== id);
+      renderQueue();
+      updateQueueUI();
+    }
+
+    function updateQueueUI() {
+      const n = selectedFiles.length;
+      if (n === 0) {
+        queueWrap.classList.remove("active");
+        filenameEl.textContent = "—";
+        processBtn.disabled = true;
+        cancelBtn.disabled = true;
+        addMoreBtn.style.display = "";
+      } else {
+        queueWrap.classList.add("active");
+        queueCount.textContent = `(${n})`;
+        processBtn.disabled = false;
+        cancelBtn.disabled = false;
+        // Старый filename-блок: суммарная сводка.
+        const totalMb = selectedFiles.reduce((s, e) => s + e.file.size, 0) / (1024 * 1024);
+        filenameEl.textContent = `📋 ${n} ${n === 1 ? "файл" : (n < 5 ? "файла" : "файлов")} · ${totalMb.toFixed(1)} МБ`;
+      }
     }
 
     fileInput.addEventListener("change", handleFileSelected);
     cameraInput.addEventListener("change", handleFileSelected);
+    queueAddInput.addEventListener("change", handleFileSelected);
+    addMoreBtn.addEventListener("click", () => queueAddInput.click());
 
     // ── Отмена выбора ─────────────────────────────────────────
-    // Сбрасывает выбранный файл в стартовое состояние без перезапуска
-    // приложения: чистит оба инпута, блокирует «Обработать» и саму «Отмену»,
-    // прячет результат. Используется и кнопкой «Отмена», и «Ещё раз».
+    // Сбрасывает очередь в стартовое состояние без перезапуска приложения.
     function resetSelection(showResult) {
-      selectedFile = null;
+      selectedFiles = [];
       fileInput.value = "";
       cameraInput.value = "";
+      queueAddInput.value = "";
       filenameEl.textContent = "—";
       processBtn.disabled = true;
       cancelBtn.disabled = true;
@@ -911,7 +1099,7 @@
         progressWrap.classList.remove("active");
         setProgress(0);
       }
-      // Чистим оба медиа-тега результата и портретный режим.
+      // Чистим медиа-теги результата и портретный режим.
       resultVideo.classList.remove("portrait");
       resultImage.classList.remove("portrait");
       resultVideo.removeAttribute("src");
@@ -919,6 +1107,9 @@
       resultVideo.style.display = "";
       resultImage.style.display = "none";
       lastBlob = null;
+      doneEntries = [];
+      renderQueue();
+      updateQueueUI();
     }
 
     cancelBtn.addEventListener("click", () => {
@@ -926,109 +1117,170 @@
       resetSelection();
     });
 
-    // ── Обработка ─────────────────────────────────────────────
+    // ── Обработка очереди ────────────────────────────────────
     processBtn.addEventListener("click", async () => {
-      if (!selectedFile) return;
+      if (selectedFiles.length === 0) return;
+      // Берём только ожидающие файлы (повторная обработка после ошибки и т.п.).
+      const pending = selectedFiles.filter(f => f.status === "pending");
+      if (pending.length === 0) {
+        setStatus(" все файлы уже обработаны. Добавь ещё или нажми «Ещё раз».");
+        return;
+      }
       isProcessing = true;
       resultWrap.classList.remove("active");
       progressWrap.classList.add("active");
       setProgress(0);
-      setTitle("ПРЕВРАЩАЮ В ПИКСЕЛИ");
       processBtn.disabled = true;
+      addMoreBtn.disabled = true;
       cancelBtn.disabled = true;
 
-      // Тип исходника определяет имя выхода, набор аргументов и тег результата.
-      const isImage = selectedFile.type.startsWith("image/");
+      const preset = PRESETS[currentPreset];
+      doneEntries = [];
 
       try {
         const ff = await ensureFFmpeg();
 
-        // Пред-уменьшаем большие фото через <canvas>, чтобы не словить
-        // «memory access out of bounds» в wasm (фото с камеры 12–48 МП).
-        // isImage определяем по ИСХОДНОМУ файлу (тип не меняется при ресайзе).
-        setStatus("📥 Читаю файл...");
-        const fileToProcess = await maybeShrinkImage(selectedFile);
-
-        const inName = "input" + getExt(fileToProcess.name);
-        const outName = isImage ? "output.jpg" : "output.mp4";
-        await ff.writeFile(inName, await fetchFile(fileToProcess));
-
-        const progressHandler = ({ progress }) => setProgress(progress);
-        ff.on("progress", progressHandler);
-
-        setStatus("⚙️ Кодирую... телефон старается изо всех сил");
-
-        // ── Сборка аргументов FFmpeg ──────────────────────────
-        // ВИДЕО: -i [-i overlay.png] + [-vf | -filter_complex] +
-        //        [-af если микрофон вкл] + encodeArgs + output
-        // ФОТО:  -i [-i overlay.png] + [-vf | -filter_complex] +
-        //        -frames:v 1 + output.jpg
-        //   (никаких -c:a/-af, -r, -b:v — у одного кадра нет потока/битрейта).
-        // Обычные пресеты идут через -vf (buildVideoFilter), как раньше.
-        // Пресеты с overlayFile (напр. q_japan) грузят PNG вторым -i и
-        // используют -filter_complex с overlay=0:0 (см. buildOverlayFilterComplex).
-        const preset = PRESETS[currentPreset];
+        // Загрузка оверлея один раз на всю партию (если применимо).
         const hasOverlay = !!preset.overlayFile;
-
         if (hasOverlay) {
           setStatus("🖼️ Загружаю оверлей...");
           await ensureOverlayLoaded(preset.overlayFile);
         }
 
-        const inputArgs = hasOverlay
-          ? ["-i", inName, "-i", "overlay.png"]
-          : ["-i", inName];
-        const filterArgs = hasOverlay
-          ? ["-filter_complex", buildOverlayFilterComplex(preset), "-map", "[out]", "-map", "0:a?"]
-          : ["-vf", buildVideoFilter(preset)];
+        const progressHandler = ({ progress }) => setProgress(progress);
+        ff.on("progress", progressHandler);
 
-        let args;
-        if (isImage) {
-          args = inputArgs.concat(filterArgs).concat(["-frames:v", "1", outName]);
-        } else {
-          const afArgs = micEffectOn ? ["-af", preset.audioFilter || DEFAULT_AUDIO_FILTER] : [];
-          args = inputArgs
-            .concat(filterArgs)
-            .concat(afArgs)
-            .concat(preset.encodeArgs)
-            .concat([outName]);
+        const total = pending.length;
+        let succeeded = 0, failed = 0;
+
+        for (let i = 0; i < total; i++) {
+          const entry = pending[i];
+          const file = entry.file;
+          const isImage = file.type.startsWith("image/");
+
+          setTitle(`ПРЕВРАЩАЮ ${i + 1}/${total}`);
+          setStatus(`⚙️ Файл ${i + 1} из ${total}: ${file.name}`);
+          updateQueueState(entry.id, "processing");
+          setProgress(0);
+
+          try {
+            // Пред-уменьшаем большие фото через Web Worker (без блокировки UI).
+            const fileToProcess = await maybeShrinkImageViaWorker(file);
+
+            const inName = "input" + getExt(fileToProcess.name);
+            const outName = isImage ? "output.jpg" : "output.mp4";
+            await ff.writeFile(inName, await fetchFile(fileToProcess));
+
+            // Обновляем прогресс для каждого файла в очереди.
+            const fileProgressHandler = ({ progress }) => {
+              setProgress((i + progress) / total);
+            };
+            ff.off("progress", progressHandler);
+            ff.on("progress", fileProgressHandler);
+
+            // ── Сборка аргументов FFmpeg ──────────────────────
+            const inputArgs = hasOverlay
+              ? ["-i", inName, "-i", getOverlayFsName(preset.overlayFile)]
+              : ["-i", inName];
+            const filterArgs = hasOverlay
+              ? ["-filter_complex", buildOverlayFilterComplex(preset), "-map", "[out]", "-map", "0:a?"]
+              : ["-vf", buildVideoFilter(preset)];
+
+            let args;
+            if (isImage) {
+              args = inputArgs.concat(filterArgs).concat(["-frames:v", "1", outName]);
+            } else {
+              const afArgs = micEffectOn ? ["-af", preset.audioFilter || DEFAULT_AUDIO_FILTER] : [];
+              args = inputArgs
+                .concat(filterArgs)
+                .concat(afArgs)
+                .concat(preset.encodeArgs)
+                .concat([outName]);
+            }
+            console.log(`FFmpeg [${i + 1}/${total}] args:`, args.join(" "));
+            await ff.exec(args);
+
+            ff.off("progress", fileProgressHandler);
+
+            const data = await ff.readFile(outName);
+
+            // Чистим память wasm: вход и выход (оверлей удаляем только в конце).
+            try {
+              await ff.deleteFile(inName);
+              await ff.deleteFile(outName);
+            } catch (_) {}
+
+            const mime = isImage ? "image/jpeg" : "video/mp4";
+            const blob = new Blob([data.buffer], { type: mime });
+            const fileName = "shkal_" + Date.now() + "_" + (i + 1) + (isImage ? ".jpg" : ".mp4");
+            doneEntries.push({ blob, fileName, isImage });
+            entry.result = blob;
+            entry.fileName = fileName;
+            succeeded++;
+            updateQueueState(entry.id, "done");
+          } catch (err) {
+            console.error(`Ошибка обработки файла ${file.name}:`, err);
+            failed++;
+            updateQueueState(entry.id, "error");
+            // Продолжаем с следующим файлом очереди.
+          }
+          setProgress((i + 1) / total);
         }
-        console.log("FFmpeg args:", args.join(" "));
-        await ff.exec(args);
 
+        // Чистим оверлей (если был) в конце всей партии.
+        if (hasOverlay) {
+          try { await ff.deleteFile(getOverlayFsName(preset.overlayFile)); } catch (_) {}
+        }
         ff.off("progress", progressHandler);
+
         setProgress(1);
 
-        setStatus("📦 Читаю результат...");
-        const data = await ff.readFile(outName);
-
-        // Чистим память wasm.
-        try { await ff.deleteFile(inName); await ff.deleteFile(outName); } catch (_) {}
-
-        const mime = isImage ? "image/jpeg" : "video/mp4";
-        const blob = new Blob([data.buffer], { type: mime });
-        const blobUrl = URL.createObjectURL(blob);
-
-        showResultMedia(isImage, blobUrl);
-        resultWrap.classList.add("active");
-        applyResultOrientation(isImage);
-        setTitle("✓ ГОТОВО");
-        setStatus("📱 " + PRESETS[currentPreset].title + " — готов! Сохрани или отправь.");
-
-        resultWrap.scrollIntoView({ behavior: "smooth", block: "nearest" });
-
-        // Тип (.mp4/.jpg) выводим из lastBlob.type в кнопках скачивания/шаринга.
-        lastBlob = blob;
-        lastFileName = "shkal_" + Date.now() + (isImage ? ".jpg" : ".mp4");
+        // ── Результат ──────────────────────────────────────
+        if (succeeded === 0) {
+          setTitle("ОШИБКА");
+          setStatus(`❌ Ни один файл не обработан${failed > 0 ? ` (ошибок: ${failed})` : ""}.`);
+        } else {
+          setTitle("✓ ГОТОВО");
+          // Если один успешный файл — показываем его превью как раньше.
+          if (succeeded === 1 && doneEntries.length === 1) {
+            const single = doneEntries[0];
+            const blobUrl = URL.createObjectURL(single.blob);
+            showResultMedia(single.isImage, blobUrl);
+            applyResultOrientation(single.isImage);
+            lastBlob = single.blob;
+            lastFileName = single.fileName;
+          } else {
+            // Несколько файлов: показываем последний как превью,
+            // а в статусе — сводка. Кнопка «Сохранить» качает все файлы по очереди.
+            const last = doneEntries[doneEntries.length - 1];
+            const blobUrl = URL.createObjectURL(last.blob);
+            showResultMedia(last.isImage, blobUrl);
+            applyResultOrientation(last.isImage);
+            lastBlob = null; // признак «несколько файлов» — share/download отдаёт всё
+            lastFileName = null;
+          }
+          resultWrap.classList.add("active");
+          resultWrap.scrollIntoView({ behavior: "smooth", block: "nearest" });
+          if (succeeded > 1) {
+            setStatus(`✅ Готово: ${succeeded} из ${total} файла(ов)${failed > 0 ? `, ошибок: ${failed}` : ""}. «Сохранить» скачает все файлы по очереди.`);
+          } else if (failed === 0) {
+            setStatus(`✅ Готово: ${succeeded} из ${total}. Сохрани или отправь.`);
+          } else {
+            setStatus(`✅ Готово: ${succeeded} из ${total}, ошибок: ${failed}.`);
+          }
+        }
       } catch (err) {
         console.error(err);
         setStatus("❌ Ошибка обработки: " + (err && err.message ? err.message : err));
         setTitle("ОШИБКА");
       } finally {
         isProcessing = false;
-        // Если файл всё ещё выбран — «Отмена» снова доступна.
-        cancelBtn.disabled = !selectedFile;
-        processBtn.disabled = !selectedFile;
+        addMoreBtn.disabled = false;
+        cancelBtn.disabled = selectedFiles.length === 0;
+        processBtn.disabled = selectedFiles.length === 0;
+        // Кнопка «Обработать» снова активна, если есть неотработанные файлы.
+        const stillPending = selectedFiles.some(f => f.status === "pending");
+        processBtn.disabled = !stillPending;
       }
     });
 
@@ -1037,27 +1289,114 @@
       return m ? "." + m[1].toLowerCase() : ".mp4";
     }
 
-    // ── Пред-уменьшение больших фото ──────────────────────────
+    // ── Пред-уменьшение больших фото через Web Worker ──────────
     // Главная причина «RuntimeError: memory access out of bounds» в
     // ffmpeg.wasm — это фото с камеры телефона (12–48 МП). При декодировании
     // в RGBA такой кадр занимает десятки МБ, и вместе с буферами фильтров
-    // линейная память wasm переполняется. Решение: уменьшаем фото через
-    // <canvas> ДО подачи в ffmpeg — этого достаточно даже для максимального
-    // пресета 480px по большей стороне. Для видео ничего не делаем (там
-    // ffmpeg стримит кадры по одному и пиковой нагрузки нет).
+    // линейная память wasm переполняется. Решение: уменьшаем фото ДО подачи
+    // в ffmpeg — этого достаточно даже для максимального пресета 480px.
+    //
+    // Раньше ресайз шёл через <canvas> в main thread — на мегапикселях
+    // это блокирует UI на 1-2 сек (анимация прогресса «замирает»). Теперь
+    // декодирование + рисование в OffscreenCanvas выполняется в Worker,
+    // main thread остаётся свободным (spinner крутится плавно).
+    //
+    // Worker инлайнен через Blob URL — не нужен отдельный .js файл.
+    // Для видео ничего не делаем (там ffmpeg стримит кадры по одному
+    // и пиковой нагрузки нет).
     const IMG_MAX_DIM = 1280; // ограничение по большей стороне (с запасом)
 
-    function maybeShrinkImage(file) {
+    const shrinkWorkerSrc = `
+      "use strict";
+      const IMG_MAX_DIM = ${IMG_MAX_DIM};
+      self.onmessage = async (e) => {
+        const { file, isPng } = e.data;
+        try {
+          if (!file.type.startsWith("image/")) {
+            self.postMessage({ ok: true, file });
+            return;
+          }
+          // Декодируем через createImageBitmap (быстрее Image, в Worker).
+          const bitmap = await createImageBitmap(file);
+          const maxSide = Math.max(bitmap.width, bitmap.height);
+          if (maxSide <= IMG_MAX_DIM) {
+            bitmap.close();
+            self.postMessage({ ok: true, file });
+            return;
+          }
+          const scale = IMG_MAX_DIM / maxSide;
+          const w = Math.round(bitmap.width * scale);
+          const h = Math.round(bitmap.height * scale);
+          // OffscreenCanvas доступен в Worker.
+          const canvas = new OffscreenCanvas(w, h);
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(bitmap, 0, 0, w, h);
+          bitmap.close();
+          const blob = await canvas.convertToBlob({
+            type: isPng ? "image/png" : "image/jpeg",
+            quality: 0.92
+          });
+          if (!blob) { self.postMessage({ ok: true, file }); return; }
+          self.postMessage({ ok: true, blob });
+        } catch (err) {
+          // Любая ошибка → отдаём исходный файл, пусть ffmpeg сам решает.
+          self.postMessage({ ok: true, file });
+        }
+      };
+    `;
+
+    let shrinkWorker = null;
+    let shrinkWorkerUrl = null;
+    function getShrinkWorker() {
+      if (shrinkWorker) return shrinkWorker;
+      // Создаём worker из inline-кода. Если OffscreenCanvas/Worker
+      // недоступны (старый браузер) — вернём null, fallback на canvas.
+      try {
+        if (typeof Worker === "undefined" || typeof OffscreenCanvas === "undefined") {
+          return null;
+        }
+        shrinkWorkerUrl = URL.createObjectURL(new Blob([shrinkWorkerSrc], { type: "application/javascript" }));
+        shrinkWorker = new Worker(shrinkWorkerUrl);
+        return shrinkWorker;
+      } catch (_) {
+        return null;
+      }
+    }
+
+    function maybeShrinkImageViaWorker(file) {
       return new Promise((resolve) => {
         if (!file.type.startsWith("image/")) return resolve(file);
+
+        const worker = getShrinkWorker();
+        if (!worker) {
+          // Fallback: main-thread canvas (старый путь).
+          return maybeShrinkImageMain(file).then(resolve);
+        }
+
+        const isPng = file.type === "image/png";
+        const handler = (e) => {
+          worker.removeEventListener("message", handler);
+          if (!e.data || !e.data.ok) return resolve(file);
+          if (e.data.blob) {
+            resolve(new File([e.data.blob], file.name, { type: file.type, lastModified: Date.now() }));
+          } else {
+            resolve(e.data.file || file);
+          }
+        };
+        worker.addEventListener("message", handler);
+        worker.postMessage({ file, isPng }, [file]);
+      });
+    }
+
+    // Fallback в main thread (если Worker/OffscreenCanvas недоступны).
+    function maybeShrinkImageMain(file) {
+      return new Promise((resolve) => {
         const img = new Image();
         const url = URL.createObjectURL(file);
         img.onload = () => {
           URL.revokeObjectURL(url);
           const maxSide = Math.max(img.naturalWidth, img.naturalHeight);
-          // Если фото и так небольшое — отдаём как есть, без перекодирования.
           if (maxSide <= IMG_MAX_DIM) return resolve(file);
-
           const scale = IMG_MAX_DIM / maxSide;
           const w = Math.round(img.naturalWidth * scale);
           const h = Math.round(img.naturalHeight * scale);
@@ -1067,7 +1406,6 @@
           ctx.drawImage(img, 0, 0, w, h);
           canvas.toBlob((blob) => {
             if (!blob) return resolve(file);
-            // Сохраняем исходное расширение/тип, чтобы getExt отработал верно.
             resolve(new File([blob], file.name, { type: file.type, lastModified: Date.now() }));
           }, file.type === "image/png" ? "image/png" : "image/jpeg", 0.92);
         };
@@ -1121,6 +1459,25 @@
     let lastBlob = null, lastFileName = "shkal.mp4";
 
     downloadBtn.addEventListener("click", () => {
+      // Если один результат — качаем файл как раньше.
+      // Если несколько — качаем каждый файл отдельно (последовательно).
+      if (doneEntries.length > 1) {
+        let idx = 0;
+        const downloadNext = () => {
+          if (idx >= doneEntries.length) return;
+          const entry = doneEntries[idx++];
+          const a = document.createElement("a");
+          a.href = URL.createObjectURL(entry.blob);
+          a.download = entry.fileName;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          // Небольшая пауза между скачиваниями, чтобы браузер не блокировал.
+          setTimeout(downloadNext, 300);
+        };
+        downloadNext();
+        return;
+      }
       if (!lastBlob) return;
       const a = document.createElement("a");
       a.href = URL.createObjectURL(lastBlob);
@@ -1131,9 +1488,32 @@
     });
 
     shareBtn.addEventListener("click", async () => {
+      // Несколько файлов: пробуем Web Share со всеми сразу.
+      if (doneEntries.length > 1) {
+        const files = doneEntries.map(e => new File([e.blob], e.fileName, { type: e.blob.type || "application/octet-stream" }));
+        const canUseWebShare = !!(navigator.canShare && navigator.canShare({ files }));
+        if (canUseWebShare) {
+          try {
+            await navigator.share({ files, title: "Шакал 2007", text: "📱 2007 позвонил..." });
+            return;
+          } catch (e) {
+            console.warn("navigator.share упал:", e && e.name, e && e.message);
+            if (e && e.name === "AbortError") return;
+          }
+        }
+        // Запасной вариант: качаем все файлы по очереди.
+        setTitle("💾 Сохранение");
+        setStatus(
+          "Telegram Mini App не даёт отправлять несколько файлов за раз. " +
+          "Файлы скачаны в «Загрузки» 👇 Открой Telegram → чат → 📎 → Файл, " +
+          "и прикрепи их по одному."
+        );
+        downloadBtn.click();
+        return;
+      }
+
+      // Один файл — как раньше.
       if (!lastBlob) return;
-      // Тип (image/jpeg или video/mp4) берём из блоба — шаринг корректно
-      // отдаёт .jpg для фото и .mp4 для видео.
       const mime = lastBlob.type || "video/mp4";
       const file = new File([lastBlob], lastFileName, { type: mime });
 
