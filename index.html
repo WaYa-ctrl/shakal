@@ -244,9 +244,127 @@
     .queue-item.processing .queue-item-remove { display: none; }
     .queue-add-row { margin-top: 6px; }
     .queue-add-row .btn { margin-top: 0; font-size: 12px; padding: 10px; }
-  </style>
+
+    /* ── Подписка / лимиты ──────────────────────────────────── */
+    .sub-panel {
+      display: flex; align-items: center; justify-content: space-between;
+      border: 2px solid #3a4654; background: #1a232c; border-radius: 8px;
+      padding: 9px 11px; margin-bottom: 12px; gap: 8px;
+    }
+    .sub-panel.premium {
+      border-color: #ff9d2e;
+      background: linear-gradient(135deg, #1a1a0c 0%, #1a232c 100%);
+      box-shadow: 0 0 12px rgba(255,157,46,.15);
+    }
+    .sub-info {
+      display: flex; flex-direction: column; gap: 2px;
+      font-size: 11px; line-height: 1.3; flex: 1; min-width: 0;
+    }
+    .sub-info .sub-title { font-weight: bold; color: #cfe8ff; }
+    .sub-info .sub-detail { color: #9fb2c4; font-size: 10px; }
+    .sub-badge {
+      font-size: 10px; padding: 3px 7px; border-radius: 5px;
+      font-weight: bold; white-space: nowrap; flex-shrink: 0;
+    }
+    .sub-badge.free { background: #1a232c; color: #9fb2c4; border: 1px solid #3a4654; }
+    .sub-badge.premium { background: #2a1a0c; color: #ff9d2e; border: 1px solid #ff9d2e; }
+    .sub-action {
+      font-size: 10px; font-weight: bold; border: none; cursor: pointer;
+      border-radius: 5px; padding: 6px 10px; transition: all .15s ease;
+      flex-shrink: 0; font-family: inherit; white-space: nowrap;
+    }
+    .sub-action.upgrade {
+      background: linear-gradient(180deg, #ff9d2e 0%, #e0701a 100%);
+      color: #fff; box-shadow: 0 2px 0 #9c4a0c;
+    }
+    .sub-action.upgrade:active { transform: translateY(2px); box-shadow: none; }
+    .sub-action.manage {
+      background: #2c3640; color: #9fb2c4; border: 1px solid #3a4654;
+    }
+    .sub-action.activate {
+      background: linear-gradient(180deg, #4a7a3a 0%, #2a4a2a 100%);
+      color: #7CFC00; box-shadow: 0 2px 0 #1a2a1a;
+    }
+    .sub-action.activate:active { transform: translateY(2px); box-shadow: none; }
+    .sub-limit-bar {
+      height: 5px; border-radius: 3px; background: #06100a;
+      overflow: hidden; margin-top: 0;
+    }
+    .sub-limit-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #7CFC00, #ff9d2e);
+      transition: width .3s ease;
+    }
+    .sub-limit-fill.exhausted { background: #d04040; }
+    .sub-activate-row {
+      display: none; align-items: center; gap: 6px; margin-top: 6px;
+    }
+    .sub-activate-row.active { display: flex; }
+    .sub-activate-input {
+      flex: 1; font-family: inherit; font-size: 11px; font-weight: bold;
+      padding: 7px 8px; border-radius: 6px;
+      border: 2px solid #3a4654; background: #0c1a0c; color: #7CFC00;
+      outline: none;
+    }
+    .sub-activate-input:focus { border-color: #7CFC00; }
+    .sub-activate-input.error { border-color: #ff6b6b; color: #ff6b6b; }
+
+    /* ── Админ-профиль ─────────────────────────────────────── */
+    .admin-wrap { display: none; margin-bottom: 14px; }
+    .admin-wrap.active { display: block; }
+    .admin-card {
+      background: linear-gradient(135deg, #0a1120 0%, #162030 100%);
+      border: 2px solid #ff9d2e; border-radius: 10px;
+      padding: 12px; box-shadow: 0 0 14px rgba(255,157,46,.15);
+    }
+    .admin-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .admin-header .admin-title {
+      color: #ff9d2e; font-size: 13px; font-weight: bold; letter-spacing: 1px;
+    }
+    .admin-header .admin-id {
+      font-size: 10px; color: #9fb2c4; background: #1a232c;
+      padding: 2px 7px; border-radius: 4px;
+    }
+    .admin-stats {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+    }
+    .admin-stat {
+      background: #1a232c; border: 1px solid #3a4654; border-radius: 7px;
+      padding: 8px 10px; text-align: center;
+    }
+    .admin-stat .stat-num {
+      font-size: 20px; font-weight: bold; color: #7CFC00;
+    }
+    .admin-stat .stat-label {
+      font-size: 10px; color: #9fb2c4; margin-top: 2px;
+    }
+    .admin-stat.warn .stat-num { color: #ff9d2e; }
+    .admin-ref-top {
+      margin-top: 10px; border-top: 1px solid #2a4a2a; padding-top: 8px;
+    }
+    .admin-ref-top .ref-title {
+      font-size: 11px; font-weight: bold; color: #ff9d2e; margin-bottom: 5px;
+    }
+    .admin-ref-row {
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 10px; color: #cfe8ff;
+      padding: 3px 0;
+    }
+    .admin-ref-row .ref-code { color: #7CFC00; font-family: monospace; }
+    .admin-ref-row .ref-count { color: #9fb2c4; }
+    .admin-settings {
+      margin-top: 10px; border-top: 1px solid #2a4a2a; padding-top: 8px;
+      display: flex; gap: 6px;
+    }
+    .admin-settings .btn { margin-top: 0; font-size: 10px; padding: 6px 8px; }
+    .admin-note {
+      font-size: 9px; color: #6a7a6a; margin-top: 8px;
+      line-height: 1.4; text-align: center;
+    }
 </head>
-<body>
   <div class="phone">
     <div class="brand">📱 SHAKAL · 2007 EDITION</div>
 
@@ -289,6 +407,27 @@
       <button class="preset" data-preset="q_arch">🏛️ Архив<small>480×640</small></button>
       <button class="preset" data-preset="q_japan">🇯🇵 Japan VHS<small>480×640</small></button>
       <button class="preset" data-preset="q_filmscratch">🎞️ Film B&amp;W<small>480×640</small></button>
+    </div>
+<!-- Панель подписки / lifetime-лимиты.
+         FREE: 10 обработок за всё время + бонус +5 за рефералку.
+         PREMIUM: безлимит на 30 дней (49р). -->
+    <div class="sub-panel" id="subPanel">
+      <div class="sub-info">
+        <span class="sub-title" id="subTitle">🔓 Бесплатный доступ</span>
+        <span class="sub-detail" id="subDetail">Лимит 10 обработок · использовано 0, осталось 10</span>
+        <div class="sub-limit-bar"><div class="sub-limit-fill" id="subLimitFill"></div></div>
+        <div class="sub-activate-row" id="subActivateRow">
+          <input class="sub-activate-input" id="subActivateInput" type="text" placeholder="Код активации (ID платежа)" />
+          <button class="sub-action activate" id="subActivateBtn">✓</button>
+        </div>
+      </div>
+      <span class="sub-badge free" id="subBadge">FREE</span>
+      <button class="sub-action upgrade" id="subActionBtn">⭐ 49р</button>
+    </div>
+
+    <!-- Рефералка: кнопка «Поделиться ссылкой» под панелью подписки. -->
+    <div style="margin-bottom:12px;">
+      <button class="btn secondary" id="refShareBtn" style="margin-top:0; font-size:11px; padding:8px 10px;">🔗 Пригласи друга (+5 обработок)</button>
     </div>
 
     <div class="filename" id="filename">—</div>
@@ -456,6 +595,9 @@
     }
     tick(); setInterval(tick, 30000);
 
+    // Отрисовка панели подписки при старте.
+    renderSubPanel();
+
     // ── DOM ───────────────────────────────────────────────────
     const $ = id => document.getElementById(id);
     const lcdStatus = $("lcdStatus"), lcdTitle = $("lcdTitle");
@@ -467,6 +609,9 @@
     const downloadBtn = $("downloadBtn"), shareBtn = $("shareBtn"), againBtn = $("againBtn");
     const queueWrap = $("queueWrap"), queueList = $("queueList"), queueCount = $("queueCount");
     const queueAddInput = $("queueAddInput"), addMoreBtn = $("addMoreBtn");
+    const subPanel = $("subPanel"), subTitle = $("subTitle"), subDetail = $("subDetail");
+    const subLimitFill = $("subLimitFill"), subBadge = $("subBadge"), subActionBtn = $("subActionBtn");
+    const subActivateRow = $("subActivateRow"), subActivateInput = $("subActivateInput"), subActivateBtn = $("subActivateBtn");
 
     function setStatus(t) { lcdStatus.innerHTML = t; }
     function setTitle(t) { lcdTitle.textContent = t; }
@@ -924,6 +1069,269 @@
       await ffmpeg.writeFile(fsName, new Uint8Array(buf));
     }
 
+    // ── Подписка & lifetime-лимиты ─────────────────────────────
+    // FREE: 10 обработок за всё время + бонус +5 за реферальную ссылку.
+    // PREMIUM: безлимит на 30 дней (49р). Активация по ID платежа ЮKassa.
+    // Рефералка: уникальный код юзера → ссылка вида t.me/shakalbot?start=REF123
+    // При переходе по ссылке — +5 к lifetime-лимиту (localStorage, t.me/start).
+    const LS_LIMIT_KEY = "shakal_used";     // { total }
+    const LS_REF_KEY = "shakal_ref";        // { code, credited (Set кодов) }
+    const LS_SUB_KEY = "shakal_sub";        // { expiresAt, paymentId, activatedAt }
+    const LIFETIME_LIMIT = 10;
+    const REF_BONUS = 5;
+    const SUB_DAYS = 30;
+    const SUB_PRICE = 49;
+    const YOOKASSA_LINK = "https://yoomoney.ru/quickpay/shop-widget?writer=seller&targets=%D0%9F%D1%80%D0%B5%D0%BC%D0%B8%D1%83%D0%BC-%D0%BF%D0%BE%D0%B4%D0%BF%D0%B8%D1%81%D0%BA%D0%B0%20SHAKAL%20%281%20%D0%BC%D0%B5%D1%81%D1%8F%D1%86%29&targets-hint=&default-sum=49&button-text=11&payment-type-choice=on&mobile-payment-type-choice=on&hint=&successURL=&quickpay=shop&account=4100118575154569";
+
+    // ── Генерация/загрузка уникального реферального кода ──
+    function getRefCode() {
+      try {
+        let raw = localStorage.getItem(LS_REF_KEY);
+        if (raw) {
+          const data = JSON.parse(raw);
+          if (data.code) return data.code;
+        }
+      } catch (_) {}
+      const code = "R" + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 6).toUpperCase();
+      saveRefData({ code: code, credited: [] });
+      return code;
+    }
+
+    function saveRefData(data) {
+      try { localStorage.setItem(LS_REF_KEY, JSON.stringify(data)); } catch (_) {}
+    }
+
+    function loadRefData() {
+      try {
+        const raw = localStorage.getItem(LS_REF_KEY);
+        return raw ? JSON.parse(raw) : { code: getRefCode(), credited: [] };
+      } catch (_) { return { code: getRefCode(), credited: [] }; }
+    }
+
+    function getUserRefLink() {
+      const code = getRefCode();
+      return `https://t.me/shakalbot?start=${code}`;
+    }
+
+    // Парсинг start-параметра из Telegram MiniApp initData.
+    function parseStartParam() {
+      if (!tg || !tg.initDataUnsafe) return null;
+      const startParam = tg.initDataUnsafe.start_param;
+      return startParam || null;
+    }
+
+    function loadLimitTotal() {
+      try {
+        const raw = localStorage.getItem(LS_LIMIT_KEY);
+        return raw ? JSON.parse(raw).total : 0;
+      } catch (_) { return 0; }
+    }
+
+    function saveLimitTotal(total) {
+      try { localStorage.setItem(LS_LIMIT_KEY, JSON.stringify({ total })); } catch (_) {}
+    }
+
+    function loadSubscription() {
+      try {
+        const raw = localStorage.getItem(LS_SUB_KEY);
+        if (!raw) return null;
+        const sub = JSON.parse(raw);
+        if (Date.now() > sub.expiresAt) {
+          localStorage.removeItem(LS_SUB_KEY);
+          return null;
+        }
+        return sub;
+      } catch (_) { return null; }
+    }
+
+    function saveSubscription(sub) {
+      try { localStorage.setItem(LS_SUB_KEY, JSON.stringify(sub)); } catch (_) {}
+    }
+
+    function isPremiumActive() {
+      return loadSubscription() !== null;
+    }
+
+    function getEffectiveLimit() {
+      if (isPremiumActive()) return Infinity;
+      return LIFETIME_LIMIT;
+    }
+
+    function getRemaining() {
+      if (isPremiumActive()) return Infinity;
+      const total = getEffectiveLimit();
+      const used = loadLimitTotal();
+      return Math.max(0, total - used);
+    }
+
+    function consumeSlot() {
+      if (isPremiumActive()) return true;
+      const limit = getEffectiveLimit();
+      const used = loadLimitTotal();
+      if (used >= limit) return false;
+      saveLimitTotal(used + 1);
+      return true;
+    }
+
+    function rollbackSlot() {
+      if (isPremiumActive()) return;
+      const used = loadLimitTotal();
+      if (used > 0) saveLimitTotal(used - 1);
+    }
+
+    function renderSubPanel() {
+      const premium = isPremiumActive();
+      const sub = loadSubscription();
+      const used = loadLimitTotal();
+      const limit = getEffectiveLimit();
+
+      if (premium && sub) {
+        subPanel.className = "sub-panel premium";
+        subBadge.className = "sub-badge premium";
+        subBadge.textContent = "⭐ PREMIUM";
+        subActionBtn.className = "sub-action manage";
+        subActionBtn.textContent = "Управление";
+        subTitle.textContent = "⭐ Премиум-доступ";
+        const daysLeft = Math.max(0, Math.ceil((sub.expiresAt - Date.now()) / (1000 * 60 * 60 * 24)));
+        subDetail.textContent = `Безлимит · осталось ${daysLeft} дн.`;
+        subLimitFill.style.display = "none";
+        subLimitFill.parentElement.style.display = "none";
+        subActivateRow.classList.remove("active");
+      } else {
+        subPanel.className = "sub-panel";
+        subBadge.className = "sub-badge free";
+        subBadge.textContent = "FREE";
+        subActionBtn.className = "sub-action upgrade";
+        subActionBtn.textContent = `⭐ ${SUB_PRICE}р`;
+        subTitle.textContent = "🔓 Бесплатный доступ";
+        const left = Math.max(0, limit - used);
+        subDetail.textContent = `Лимит ${limit} обработок · использовано ${used}, осталось ${left}`;
+        subLimitFill.style.display = "";
+        subLimitFill.parentElement.style.display = "";
+        if (used >= limit) {
+          subLimitFill.style.width = "100%";
+          subLimitFill.classList.add("exhausted");
+        } else {
+          subLimitFill.style.width = `${(used / limit) * 100}%`;
+          subLimitFill.classList.remove("exhausted");
+        }
+        subActivateRow.classList.remove("active");
+      }
+    }
+
+    subActionBtn.addEventListener("click", () => {
+      if (isPremiumActive()) {
+        if (subActivateRow.classList.contains("active")) {
+          subActivateRow.classList.remove("active");
+          subActivateInput.classList.remove("error");
+          subActivateInput.value = "";
+        } else {
+          subActivateRow.classList.add("active");
+          subActivateInput.placeholder = "ID платежа для продления";
+          subActivateInput.focus();
+        }
+        return;
+      }
+      if (subActivateRow.classList.contains("active")) {
+        subActivateRow.classList.remove("active");
+        subActivateInput.classList.remove("error");
+        subActivateInput.value = "";
+        return;
+      }
+      if (getRemaining() <= 0) {
+        subActivateRow.classList.add("active");
+        subActivateInput.placeholder = `Оплати ${SUB_PRICE}р на ЮMoney и введи ID платежа`;
+        subActivateInput.focus();
+        return;
+      }
+      try {
+        window.open(YOOKASSA_LINK, "_blank");
+      } catch (_) {
+        setStatus("🔗 Открой ссылку для оплаты: " + YOOKASSA_LINK);
+      }
+      setTimeout(() => {
+        subActivateRow.classList.add("active");
+        subActivateInput.placeholder = "Оплати и введи ID платежа";
+        subActivateInput.focus();
+      }, 500);
+    });
+
+    subActivateBtn.addEventListener("click", () => {
+      const code = subActivateInput.value.trim();
+      if (!code || code.length < 5) {
+        subActivateInput.classList.add("error");
+        subActivateInput.placeholder = "ID платежа слишком короткий";
+        return;
+      }
+      const now = Date.now();
+      const isRenewal = isPremiumActive();
+      const oldSub = loadSubscription();
+      const expiresAt = now + SUB_DAYS * 24 * 60 * 60 * 1000;
+      const newExpiry = isRenewal ? oldSub.expiresAt + SUB_DAYS * 24 * 60 * 60 * 1000 : expiresAt;
+
+      saveSubscription({
+        paymentId: code,
+        activatedAt: now,
+        expiresAt: newExpiry
+      });
+
+      const daysTotal = Math.ceil((newExpiry - now) / (1000 * 60 * 60 * 24));
+      setTitle("⭐ ПРЕМИУМ");
+      setStatus(`Подписка активирована на ${daysTotal} дней! Безлимит включён.`);
+      subActivateInput.classList.remove("error");
+      subActivateInput.value = "";
+      subActivateRow.classList.remove("active");
+      renderSubPanel();
+    });
+
+    subActivateInput.addEventListener("input", () => {
+      subActivateInput.classList.remove("error");
+    });
+    subActivateInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") subActivateBtn.click();
+    });
+
+    // Кнопка «Поделиться реферальной ссылкой»
+    const refShareBtn = $("refShareBtn");
+    refShareBtn.addEventListener("click", async () => {
+      const link = getUserRefLink();
+      const text = `📱 Шакал 2007 — верни фото/видео в эпоху пикселей!\n\n🔗 Перейди по ссылке и получи +${REF_BONUS} обработок:\n${link}`;
+
+      // Пробуем шаринг через Telegram Mini App (если доступен).
+      if (tg && tg.openTelegramLink) {
+        // Не можем поделиться ссылкой напрямую через tg.shareToStory —
+        // но можем показать инструкцию.
+      }
+
+      // Копируем в буфер обмена + показываем ссылку.
+      try {
+        await navigator.clipboard.writeText(text);
+        setStatus("🔗 Реферальная ссылка скопирована! Отправь её другу — он получит +" + REF_BONUS + " обработок.");
+        setTitle("🔗 ПРИГЛАСИ ДРУГА");
+      } catch (_) {
+        // Fallback: показываем текст, юзер копирует вручную.
+        setStatus("📋 Реферальная ссылка: " + link + " (+" + REF_BONUS + " за переход)");
+      }
+    });
+
+    // ── Реферальная система ──────────────────────────────────
+    // При старте: если юзер пришёл по ссылке ?start=REF_CODE —
+    // зачисляем +5 бонусных обработок ТОЛЬКО если это новый реферер.
+    (function applyRefBonus() {
+      const refCode = parseStartParam();
+      if (!refCode) return;
+      const refData = loadRefData();
+      if (refData.credited && refData.credited.includes(refCode)) return;
+      const total = loadLimitTotal();
+      saveLimitTotal(total + REF_BONUS);
+      if (!refData.credited) refData.credited = [];
+      refData.credited.push(refCode);
+      saveRefData(refData);
+      setTitle("🔗 РЕФЕРАЛ");
+      setStatus(`+${REF_BONUS} обработок по реферальной ссылке! Теперь у тебя ${getRemaining()} попыток.`);
+      renderSubPanel();
+    })();
+
     // ── Очередь файлов ────────────────────────────────────────
     // selectedFiles: массив выбранных файлов. Пользователь может добавить
     // несколько файлов сразу (input[multiple]) или по одному через камеру.
@@ -1068,11 +1476,17 @@
       } else {
         queueWrap.classList.add("active");
         queueCount.textContent = `(${n})`;
-        processBtn.disabled = false;
+        // Если лимит исчерпан — блокируем кнопку, показываем причину.
+const remaining = getRemaining();
+        const canProcess = remaining > 0;
+        processBtn.disabled = !canProcess;
         cancelBtn.disabled = false;
-        // Старый filename-блок: суммарная сводка.
         const totalMb = selectedFiles.reduce((s, e) => s + e.file.size, 0) / (1024 * 1024);
-        filenameEl.textContent = `📋 ${n} ${n === 1 ? "файл" : (n < 5 ? "файла" : "файлов")} · ${totalMb.toFixed(1)} МБ`;
+        let line = `📋 ${n} ${n === 1 ? "файл" : (n < 5 ? "файла" : "файлов")} · ${totalMb.toFixed(1)} МБ`;
+        if (!canProcess) {
+          line += ` · ⚠️ Лимит 0/${getEffectiveLimit()}`;
+        }
+        filenameEl.textContent = line;
       }
     }
 
@@ -1126,6 +1540,22 @@
         setStatus(" все файлы уже обработаны. Добавь ещё или нажми «Ещё раз».");
         return;
       }
+
+      // ── Проверка дневного лимита ──────────────────────────
+      const remaining = getDailyRemaining();
+      const filesToProcess = Math.min(pending.length, remaining === Infinity ? pending.length : remaining);
+      if (filesToProcess === 0) {
+        setStatus(`❌ Лимит исчерпан (${getEffectiveLimit()} обработок всего). Оформи премиум — безлимит за ${SUB_PRICE}р/мес.`);
+        renderSubPanel();
+        return;
+      }
+      if (filesToProcess < pending.length) {
+        setStatus(
+          `⚠️ Лимит: можно обработать только ${filesToProcess} из ${pending.length} файла(ов). ` +
+          `Остальные останутся в очереди. Премиум снимает лимит — ${SUB_PRICE}р/мес.`
+        );
+      }
+
       isProcessing = true;
       resultWrap.classList.remove("active");
       progressWrap.classList.add("active");
@@ -1150,16 +1580,25 @@
         const progressHandler = ({ progress }) => setProgress(progress);
         ff.on("progress", progressHandler);
 
-        const total = pending.length;
+        const actualTotal = filesToProcess;
         let succeeded = 0, failed = 0;
 
-        for (let i = 0; i < total; i++) {
+        for (let i = 0; i < actualTotal; i++) {
           const entry = pending[i];
           const file = entry.file;
           const isImage = file.type.startsWith("image/");
 
-          setTitle(`ПРЕВРАЩАЮ ${i + 1}/${total}`);
-          setStatus(`⚙️ Файл ${i + 1} из ${total}: ${file.name}`);
+          // Потребляем слот дневного лимита ДО обработки.
+          if (!isPremiumActive() && i < actualTotal) {
+            const ok = consumeSlot();
+            if (!ok) {
+              setStatus(`❌ Лимит исчерпан во время обработки (всего ${getEffectiveLimit()}).`);
+              break;
+            }
+          }
+
+          setTitle(`ПРЕВРАЩАЮ ${i + 1}/${actualTotal}`);
+          setStatus(`⚙️ Файл ${i + 1} из ${actualTotal}: ${file.name}`);
           updateQueueState(entry.id, "processing");
           setProgress(0);
 
@@ -1173,7 +1612,7 @@
 
             // Обновляем прогресс для каждого файла в очереди.
             const fileProgressHandler = ({ progress }) => {
-              setProgress((i + progress) / total);
+              setProgress((i + progress) / actualTotal);
             };
             ff.off("progress", progressHandler);
             ff.on("progress", fileProgressHandler);
@@ -1197,7 +1636,7 @@
                 .concat(preset.encodeArgs)
                 .concat([outName]);
             }
-            console.log(`FFmpeg [${i + 1}/${total}] args:`, args.join(" "));
+            console.log(`FFmpeg [${i + 1}/${actualTotal}] args:`, args.join(" "));
             await ff.exec(args);
 
             ff.off("progress", fileProgressHandler);
@@ -1221,10 +1660,10 @@
           } catch (err) {
             console.error(`Ошибка обработки файла ${file.name}:`, err);
             failed++;
+            rollbackSlot();
             updateQueueState(entry.id, "error");
-            // Продолжаем с следующим файлом очереди.
           }
-          setProgress((i + 1) / total);
+          setProgress((i + 1) / actualTotal);
         }
 
         // Чистим оверлей (если был) в конце всей партии.
@@ -1262,11 +1701,11 @@
           resultWrap.classList.add("active");
           resultWrap.scrollIntoView({ behavior: "smooth", block: "nearest" });
           if (succeeded > 1) {
-            setStatus(`✅ Готово: ${succeeded} из ${total} файла(ов)${failed > 0 ? `, ошибок: ${failed}` : ""}. «Сохранить» скачает все файлы по очереди.`);
+            setStatus(`✅ Готово: ${succeeded} из ${actualTotal} файла(ов)${failed > 0 ? `, ошибок: ${failed}` : ""}. «Сохранить» скачает все файлы по очереди.`);
           } else if (failed === 0) {
-            setStatus(`✅ Готово: ${succeeded} из ${total}. Сохрани или отправь.`);
+            setStatus(`✅ Готово: ${succeeded} из ${actualTotal}. Сохрани или отправь.`);
           } else {
-            setStatus(`✅ Готово: ${succeeded} из ${total}, ошибок: ${failed}.`);
+            setStatus(`✅ Готово: ${succeeded} из ${actualTotal}, ошибок: ${failed}.`);
           }
         }
       } catch (err) {
@@ -1281,6 +1720,8 @@
         // Кнопка «Обработать» снова активна, если есть неотработанные файлы.
         const stillPending = selectedFiles.some(f => f.status === "pending");
         processBtn.disabled = !stillPending;
+        // Обновляем панель подписки (счётчик мог измениться).
+        renderSubPanel();
       }
     });
 
