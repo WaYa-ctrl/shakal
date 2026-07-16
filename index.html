@@ -43,6 +43,15 @@
       text-transform: uppercase;
     }
 
+    .topbar { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; }
+    .topbar .brand { margin:0; text-align:left; letter-spacing:2px; }
+    .theme-switch { display:flex; padding:2px; border:1px solid #4a5664; border-radius:7px; background:#1a232c; flex-shrink:0; }
+    .theme-btn {
+      border:0; border-radius:5px; padding:5px 7px; background:transparent; color:#788b9d;
+      font:700 8px/1 "IBM Plex Mono", "Courier New", monospace; cursor:pointer;
+    }
+    .theme-btn.active { background:#2c6fb0; color:#fff; }
+
     /* ── LCD-экран (как на старом телефоне) ─────────────────── */
     .screen {
       background: #0c1a0c;
@@ -364,9 +373,157 @@
       font-size: 9px; color: #6a7a6a; margin-top: 8px;
       line-height: 1.4; text-align: center;
     }
+
+    /* ── Compact conversion pass ──────────────────────────────
+       Upload is now the first action after the LCD. Geometry is denser,
+       while controls keep a usable touch target and every feature remains. */
+    :root {
+      --space-2: 2px; --space-4: 4px; --space-6: 6px; --space-8: 8px;
+      --space-10: 10px; --space-12: 12px; --space-16: 16px;
+      --radius-3: 3px; --radius-5: 5px; --radius-7: 7px;
+      --radius-10: 10px; --radius-16: 16px;
+      --color-bg-app: #0a1929; --color-bg-phone: #232c36;
+      --color-bg-surface: #1a232c; --color-bg-lcd: #0c1a0c;
+      --color-text-primary: #cfe8ff; --color-text-muted: #9fb2c4;
+      --color-text-lcd: #7cfc00; --color-text-accent: #ff9d2e;
+      --color-border-default: #3a4654; --color-border-active: #7cfc00;
+      --color-border-danger: #d04040;
+    }
+    body { padding: 6px 6px 18px; align-items: flex-start; }
+    .phone {
+      max-width: 390px; padding: 8px; border-radius: var(--radius-16);
+      box-shadow: 0 12px 28px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.1);
+    }
+    .brand { font-size: 9px; letter-spacing: 2px; margin-bottom: 6px; }
+    .screen {
+      min-height: 84px; padding: 9px; gap: 5px; margin-bottom: 8px;
+      border-width: 3px; border-radius: var(--radius-7);
+    }
+    .lcd-title { font-size: 13px; }
+    .lcd-status { font-size: 10px; min-height: 14px; line-height: 1.3; }
+    .lcd-signal { font-size: 8px; padding-top: 4px; }
+    .progress-bar { height: 10px; }
+    .progress-pct { font-size: 9px; }
+
+    .source-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
+      margin-bottom: 8px;
+    }
+    .source-grid .btn {
+      min-height: 40px; margin: 0; padding: 9px 6px; border-radius: var(--radius-7);
+      display: flex; align-items: center; justify-content: center; font-size: 11px;
+    }
+    .section-kicker {
+      margin: 2px 1px 5px; color: var(--color-text-muted); font-size: 9px;
+      font-weight: bold; letter-spacing: 1.4px;
+    }
+    .presets {
+      grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px;
+      margin-bottom: 8px;
+    }
+    .preset {
+      min-height: 42px; padding: 6px 2px; border-width: 1px;
+      border-radius: var(--radius-5); font-size: 9px;
+    }
+    .preset small { font-size: 7px; margin-top: 1px; }
+    .preset.active { box-shadow: inset 0 0 8px rgba(124,252,0,.14); }
+
+    .sub-panel {
+      padding: 6px 8px; margin-bottom: 7px; gap: 6px; border-width: 1px;
+      border-radius: var(--radius-7);
+    }
+    .sub-info { font-size: 9px; gap: 1px; }
+    .sub-info .sub-detail { font-size: 8px; }
+    .sub-badge { font-size: 8px; padding: 2px 5px; }
+    .sub-action { font-size: 9px; padding: 5px 7px; }
+    .sub-limit-bar { height: 3px; }
+
+    .toggles { gap: 5px; margin-bottom: 8px; }
+    .toggle-row { padding: 5px 7px; border-width: 1px; border-radius: var(--radius-7); gap: 6px; }
+    .toggle-label { font-size: 9px; }
+    .toggle-label small { display: none; }
+    .toggle-switch { border-width: 1px; border-radius: var(--radius-5); }
+    .toggle-opt { min-height: 32px; padding: 5px 7px; font-size: 8px; }
+
+    .filename { margin-bottom: 6px; min-height: 11px; font-size: 9px; }
+    .queue-wrap { margin-bottom: 7px; }
+    .queue-header { font-size: 9px; margin-bottom: 4px; }
+    .queue-list { max-height: 132px; gap: 3px; }
+    .queue-item { gap: 5px; padding: 5px 6px; border-radius: var(--radius-5); font-size: 9px; }
+    .queue-item-icon { font-size: 11px; }
+    .queue-item-size, .queue-item-status { font-size: 8px; }
+    .queue-add-row { margin-top: 4px; }
+    .queue-add-row .btn { min-height: 36px; padding: 7px; font-size: 10px; }
+
+    .btn {
+      min-height: 40px; padding: 10px 8px; border-radius: var(--radius-7);
+      font-size: 11px; box-shadow: 0 2px 0 #0a3361, 0 4px 9px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.18);
+    }
+    .btn + .btn { margin-top: 6px; }
+    .action-grid { gap: 6px; }
+    .action-grid .btn { min-height: 42px; }
+    .result-wrap { margin-top: 8px; }
+    .result-screen {
+      padding: 4px; border-width: 4px; border-radius: var(--radius-10);
+      box-shadow: inset 0 0 0 1px #050a05, inset 0 0 18px rgba(0,0,0,.8),
+        0 0 0 1px #2c3640, 0 0 8px rgba(124,252,0,.14), 0 7px 18px rgba(0,0,0,.55);
+    }
+    .result-video { border-radius: var(--radius-5); }
+    .result-actions { gap: 6px; margin-top: 7px; }
+    .warn { margin-top: 8px; font-size: 8px; }
+
+    @media (max-width: 340px) {
+      body { padding-inline: 3px; }
+      .phone { padding: 6px; }
+      .presets { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .source-grid, .action-grid, .result-actions { gap: 4px; }
+      .source-grid .btn, .btn { font-size: 10px; }
+      .toggle-row { align-items: stretch; flex-direction: column; }
+      .toggle-switch { width: 100%; }
+      .toggle-opt { flex: 1; }
+      .sub-detail { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    }
+    /* ── Вторая тема: SHAKAL NIGHT из продуктового концепта ── */
+    body[data-theme="night"] {
+      font-family:"IBM Plex Mono", "Courier New", monospace;
+      background:radial-gradient(circle at 20% 0%,rgba(117,87,255,.17),transparent 35%),
+                 radial-gradient(circle at 85% 85%,rgba(255,47,136,.10),transparent 32%),#09090f;
+      color:#f4f4f7;
+    }
+    body[data-theme="night"] .phone { background:#20212a; border-color:#505260; box-shadow:0 18px 45px rgba(0,0,0,.7),inset 0 1px 0 rgba(255,255,255,.08); }
+    body[data-theme="night"] .brand { color:#f2f2f6; }
+    body[data-theme="night"] .theme-switch { background:#121219; border-color:#3c3d49; }
+    body[data-theme="night"] .theme-btn { color:#8d8e9b; }
+    body[data-theme="night"] .theme-btn.active { background:#7457ff; color:#fff; }
+    body[data-theme="night"] .screen { background:#bff5d6; border-color:#78aa8e; box-shadow:inset 0 0 18px rgba(19,69,46,.18),inset 0 0 0 2px #d8ffe8; }
+    body[data-theme="night"] .lcd-title, body[data-theme="night"] .lcd-status { color:#10251c; text-shadow:none; }
+    body[data-theme="night"] .lcd-signal { color:#3f6854; border-color:#8fc9a7; }
+    body[data-theme="night"] .progress-bar { background:#172329; border-color:#5f9baa; }
+    body[data-theme="night"] .progress-fill { background:repeating-linear-gradient(45deg,#6fe4ff 0 6px,#43c8e7 6px 12px); }
+    body[data-theme="night"] .progress-pct { color:#174b59; }
+    body[data-theme="night"] .btn { background:#7457ff; box-shadow:0 3px 0 #4932b8,0 6px 14px rgba(0,0,0,.42),inset 0 1px 0 rgba(255,255,255,.22); }
+    body[data-theme="night"] .btn.secondary { background:#292a35; box-shadow:0 3px 0 #14141b,0 6px 14px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.08); }
+    body[data-theme="night"] .btn.amber { background:#ff2f88; box-shadow:0 3px 0 #a41253,0 6px 14px rgba(0,0,0,.4); }
+    body[data-theme="night"] .preset, body[data-theme="night"] .toggle-row, body[data-theme="night"] .toggle-opt,
+    body[data-theme="night"] .sub-panel { background:#181820; border-color:#3c3d49; color:#aeb0bd; }
+    body[data-theme="night"] .preset.active, body[data-theme="night"] .toggle-opt.active { background:#292141; border-color:#876bff; color:#c9bdff; box-shadow:inset 0 0 9px rgba(117,87,255,.22); }
+    body[data-theme="night"] .toggle-opt.active.warn-amber { background:#39182b; color:#ff72ad; }
+    body[data-theme="night"] .toggle-label, body[data-theme="night"] .filename, body[data-theme="night"] .sub-info .sub-detail { color:#aeb0bd; }
+    body[data-theme="night"] .sub-info .sub-title { color:#f4f4f7; }
+    body[data-theme="night"] .sub-panel.premium { border-color:#ff2f88; background:linear-gradient(135deg,#321427,#181820); }
+    body[data-theme="night"] .sub-badge.premium { background:#39182b; border-color:#ff2f88; color:#ff72ad; }
+    body[data-theme="night"] .result-screen { border-color:#181820; box-shadow:inset 0 0 0 2px #08080d,inset 0 0 26px rgba(0,0,0,.85),0 0 0 2px #454755,0 0 16px rgba(117,87,255,.2),0 10px 26px rgba(0,0,0,.65); }
+</style>
 </head>
+<body>
   <div class="phone">
-    <div class="brand">📱 SHAKAL · 2007 EDITION</div>
+    <div class="topbar">
+      <div class="brand">📱 SHAKAL · 2007 EDITION</div>
+      <div class="theme-switch" role="group" aria-label="Тема интерфейса">
+        <button type="button" class="theme-btn active" data-theme-choice="retro">RETRO</button>
+        <button type="button" class="theme-btn" data-theme-choice="night">NIGHT</button>
+      </div>
+    </div>
 
     <!-- LCD-экран -->
     <div class="screen">
@@ -383,12 +540,23 @@
       </div>
     </div>
 
+    <!-- Fast path: the source action is visible before presets, monetization
+         and advanced controls. Hidden inputs stay here so labels remain native. -->
+    <input type="file" id="fileInput" class="hidden-input" accept="video/*, image/*" multiple />
+    <input type="file" id="cameraInput" class="hidden-input" accept="video/*, image/*" multiple capture="environment" />
+    <input type="file" id="queueAddInput" class="hidden-input" accept="video/*, image/*" multiple />
+    <div class="source-grid" aria-label="Выбор исходника">
+      <label for="fileInput" class="btn secondary">📁 Из галереи</label>
+      <label for="cameraInput" class="btn secondary">📸 Снять сейчас</label>
+    </div>
+
     <!-- Пресеты качества. Хронология: цифровые (2000-е) → плёночные (XX в.)
          → архив (до 1900). Все фильтры — eq/noise/hue/colorbalance/boxblur/unsharp:
          гарантированно есть в урезанной wasm-сборке (curves/chromashift/vignette
          ранее крашили движок). -->
+    <div class="section-kicker">ВЫБЕРИ ЭПОХУ</div>
     <div class="presets">
-      <button class="preset active" data-preset="q_2007">📱 2007<small>176×144</small></button>
+      <button class="preset active" data-preset="q_2007">📱 2007<small>320×240</small></button>
       <button class="preset" data-preset="q_nul">🕹️ Нулевые<small>480×360</small></button>
       <button class="preset" data-preset="q_vhs">📼 VHS<small>320×240</small></button>
       <button class="preset" data-preset="q_phonk">🌃 Phonk<small>320×426</small></button>
@@ -409,15 +577,15 @@
       <button class="preset" data-preset="q_filmscratch">🎞️ Film B&amp;W<small>480×640</small></button>
     </div>
 <!-- Панель подписки / lifetime-лимиты.
-         FREE: 10 обработок за всё время + бонус +5 за рефералку.
+         FREE: 25 обработок за всё время + бонус +5 за рефералку.
          PREMIUM: безлимит на 30 дней (49р). -->
     <div class="sub-panel" id="subPanel">
       <div class="sub-info">
         <span class="sub-title" id="subTitle">🔓 Бесплатный доступ</span>
-        <span class="sub-detail" id="subDetail">Лимит 10 обработок · использовано 0, осталось 10</span>
+        <span class="sub-detail" id="subDetail">Лимит 25 обработок · использовано 0, осталось 25</span>
         <div class="sub-limit-bar"><div class="sub-limit-fill" id="subLimitFill"></div></div>
         <div class="sub-activate-row" id="subActivateRow">
-          <input class="sub-activate-input" id="subActivateInput" type="text" placeholder="Код активации (ID платежа)" />
+          <input class="sub-activate-input" id="subActivateInput" type="text" placeholder="Проверка оплаты" readonly />
           <button class="sub-action activate" id="subActivateBtn">✓</button>
         </div>
       </div>
@@ -428,6 +596,57 @@
     <!-- Рефералка: кнопка «Поделиться ссылкой» под панелью подписки. -->
     <div style="margin-bottom:12px;">
       <button class="btn secondary" id="refShareBtn" style="margin-top:0; font-size:11px; padding:8px 10px;">🔗 Пригласи друга (+5 обработок)</button>
+    </div>
+
+    <!-- Админ-панель. Видна только если Telegram user.id === ADMIN_ID.
+         Показывает заглушки (локальные данные) + инструкцию по подключению сервера. -->
+    <div class="admin-wrap" id="adminWrap">
+      <div class="admin-card">
+        <div class="admin-header">
+          <span class="admin-title">⚙️ АДМИН-ПРОФИЛЬ</span>
+          <span class="admin-id" id="adminIdDisplay"></span>
+        </div>
+        <div class="admin-stats">
+          <div class="admin-stat">
+            <div class="stat-num" id="adminStatUsers">—</div>
+            <div class="stat-label">👤 Всего юзеров</div>
+          </div>
+          <div class="admin-stat warn">
+            <div class="stat-num" id="adminStatPremium">—</div>
+            <div class="stat-label">⭐ Премиум</div>
+          </div>
+          <div class="admin-stat">
+            <div class="stat-num" id="adminStatFree">—</div>
+            <div class="stat-label">🔓 Бесплатных</div>
+          </div>
+          <div class="admin-stat warn">
+            <div class="stat-num" id="adminStatRefs">—</div>
+            <div class="stat-label">🔗 Переходов по рефералкам</div>
+          </div>
+          <div class="admin-stat">
+            <div class="stat-num" id="adminStatRevenue">—</div>
+            <div class="stat-label">💰 Выручка (оценка)</div>
+          </div>
+          <div class="admin-stat">
+            <div class="stat-num" id="adminStatSessions">—</div>
+            <div class="stat-label">📱 Сессий сегодня</div>
+          </div>
+        </div>
+        <div class="admin-ref-top">
+          <div class="ref-title">🏆 Топ-3 рефералов</div>
+          <div id="adminRefTopList">
+            <div class="admin-ref-row"><span class="ref-code">—</span><span class="ref-count">0 переходов</span></div>
+          </div>
+        </div>
+        <div class="admin-settings">
+          <button class="btn secondary" id="adminSimUserBtn">➕ Создать тест-юзера</button>
+          <button class="btn danger" id="adminResetBtn">🗑️ Сброс статистики</button>
+        </div>
+        <div class="admin-note">
+          📡 Это локальная статистика (localStorage).<br/>
+          Для реальной аналитики подключи сервер: шли telegram_id + действие при каждом заходе на бэкенд, агрегируй в БД.
+        </div>
+      </div>
     </div>
 
     <div class="filename" id="filename">—</div>
@@ -462,14 +681,6 @@
         <button class="btn secondary" id="addMoreBtn">➕ Добавить ещё файлы</button>
       </div>
     </div>
-
-    <!-- Два способа выбрать исходник: из галереи или снять камерой.
-         Из галереи поддерживается множественный выбор (multiple). -->
-    <input type="file" id="fileInput" class="hidden-input" accept="video/*, image/*" multiple />
-    <input type="file" id="cameraInput" class="hidden-input" accept="video/*, image/*" multiple capture="environment" />
-    <input type="file" id="queueAddInput" class="hidden-input" accept="video/*, image/*" multiple />
-    <label for="fileInput" class="btn secondary">📁 Из галереи</label>
-    <label for="cameraInput" class="btn secondary">📸 Снять сейчас</label>
 
     <!-- Обработать + Отмена: две колонки. Отмена активна только когда
          выбран файл, до этого заблокирована. -->
@@ -522,7 +733,7 @@
     const VENDOR_BASE = "vendor";
     // Cache-busting: увеличь число, если файлы в vendor/ обновились, а
     // браузер упорно тянет их из кеша.
-    const ASSET_VERSION = "v2";
+      const ASSET_VERSION = "v3";
 
     function loadScript(url, timeoutMs = 20000) {
       return new Promise((resolve, reject) => {
@@ -573,6 +784,31 @@
     const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
     if (tg) { tg.expand(); tg.ready && tg.ready(); }
 
+    // Исходная RETRO-тема остаётся темой по умолчанию. NIGHT — опциональная
+    // тема из нового продуктового концепта; выбор запоминается на устройстве.
+    const THEME_STORAGE_KEY = "shakal-ui-theme";
+    function applyTheme(value) {
+      const theme = value === "night" ? "night" : "retro";
+      document.body.dataset.theme = theme;
+      document.querySelectorAll("[data-theme-choice]").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.themeChoice === theme);
+        btn.setAttribute("aria-pressed", btn.dataset.themeChoice === theme ? "true" : "false");
+      });
+      return theme;
+    }
+    let initialTheme = "retro";
+    try {
+      const queryTheme = new URLSearchParams(location.search).get("theme");
+      initialTheme = queryTheme || localStorage.getItem(THEME_STORAGE_KEY) || "retro";
+    } catch (_) {}
+    applyTheme(initialTheme);
+    document.querySelectorAll("[data-theme-choice]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const theme = applyTheme(btn.dataset.themeChoice);
+        try { localStorage.setItem(THEME_STORAGE_KEY, theme); } catch (_) {}
+      });
+    });
+
     // ── Диагностика: показываем любую неотловленную ошибку на LCD-экране ──
     window.addEventListener("error", (e) => {
       const el = document.getElementById("lcdStatus");
@@ -595,9 +831,6 @@
     }
     tick(); setInterval(tick, 30000);
 
-    // Отрисовка панели подписки при старте.
-    renderSubPanel();
-
     // ── DOM ───────────────────────────────────────────────────
     const $ = id => document.getElementById(id);
     const lcdStatus = $("lcdStatus"), lcdTitle = $("lcdTitle");
@@ -612,6 +845,11 @@
     const subPanel = $("subPanel"), subTitle = $("subTitle"), subDetail = $("subDetail");
     const subLimitFill = $("subLimitFill"), subBadge = $("subBadge"), subActionBtn = $("subActionBtn");
     const subActivateRow = $("subActivateRow"), subActivateInput = $("subActivateInput"), subActivateBtn = $("subActivateBtn");
+    const adminWrap = $("adminWrap"), adminIdDisplay = $("adminIdDisplay");
+    const adminStatUsers = $("adminStatUsers"), adminStatPremium = $("adminStatPremium");
+    const adminStatFree = $("adminStatFree"), adminStatRefs = $("adminStatRefs");
+    const adminStatRevenue = $("adminStatRevenue"), adminStatSessions = $("adminStatSessions");
+    const adminRefTopList = $("adminRefTopList"), adminSimUserBtn = $("adminSimUserBtn"), adminResetBtn = $("adminResetBtn");
 
     function setStatus(t) { lcdStatus.innerHTML = t; }
     function setTitle(t) { lcdTitle.textContent = t; }
@@ -638,10 +876,12 @@
       // ════════ ЦИФРОВАЯ ЭПОХА (2000-е) ════════
       q_2007: {
         title: "📱 2007 (классика)",
-        // Телефон 2007: пиксельный 176×144, перенасыщенные цвета, крупный шум.
-        width: 176, height: 144,
-        vfPostScale: "eq=contrast=1.4:brightness=0.15:saturation=1.6,noise=c0s=30:c1s=40:allf=t",
-        encodeArgs: ["-r", "10", "-c:v", "libx264", "-b:v", "70k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
+        // Камерофон 2007: QVGA, цветной CCD-шум, дата и лёгкие строки экрана.
+        width: 320, height: 240,
+        scaleFlags: "",
+        overlayFile: "overlay_2007.png",
+        vfPostScale: "eq=contrast=1.28:brightness=0.06:gamma=1.12:saturation=1.35,hue=h=-2:s=1.06,colorbalance=rs=0.05:gs=0.02:bs=0.05:rh=0.03:bh=-0.03,noise=c0s=16:c1s=20:allf=t",
+        encodeArgs: ["-r", "12", "-c:v", "libx264", "-b:v", "110k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
                      "-ac", "1", "-ar", "8000", "-c:a", "aac", "-b:a", "16k"]
       },
       q_nul: {
@@ -651,7 +891,7 @@
         // Звук — хрипящая рация: tremolo + acrusher bits=3.
         width: 480, height: 360,
         scaleFlags: "",
-        vfPostScale: "eq=contrast=1.45:gamma=1.7:brightness=-0.06:saturation=1.2,noise=c0s=22:allf=t",
+        vfPostScale: "eq=contrast=1.22:brightness=0.02:gamma=1.28:saturation=1.05,colorbalance=bs=0.04:rh=0.05:bh=-0.03,noise=c0s=14:c1s=18:allf=t",
         audioFilter: "volume=10,highpass=f=600,lowpass=f=3000,acrusher=bits=3:mode=log,tremolo=f=7:d=0.4",
         encodeArgs: ["-r", "24", "-c:v", "libx264", "-b:v", "250k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
                      "-ac", "1", "-ar", "8000", "-c:a", "aac", "-b:a", "24k"]
@@ -664,7 +904,8 @@
         // эмулируется через gamma>1 (лёгкое «выцветание»/мягкость).
         width: 320, height: 240,
         scaleFlags: "",
-        vfPostScale: "eq=contrast=1.1:saturation=1.4:brightness=0.03:gamma=1.06,hue=h=4:s=1.05,colorbalance=rs=0.04:gs=0.02:bs=-0.04,noise=c0s=28:c1s=20:allf=t",
+        overlayFile: "overlay_vhs.png",
+        vfPostScale: "eq=contrast=1.08:brightness=0.02:gamma=1.08:saturation=1.22,hue=h=4:s=1.03,colorbalance=rs=0.05:gs=0.02:bs=0.03:rh=0.05:bh=0.04,noise=c0s=16:c1s=12:allf=t",
         encodeArgs: ["-r", "24", "-c:v", "libx264", "-b:v", "200k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
                      "-ac", "1", "-ar", "11025", "-c:a", "aac", "-b:a", "24k"]
       },
@@ -675,7 +916,9 @@
         // unsharp убран для гарантии стабильности (хотя на мелком кадре работал),
         // дёрзкая резкость держит высокий контраст 1.6.
         width: 320, height: 426,
-        vfPostScale: "eq=contrast=1.6:brightness=0.15:gamma=1.4:saturation=1.3:gamma_g=1.1,noise=c0s=18:c1s=12:allf=t",
+        scaleFlags: "",
+        overlayFile: "overlay_phonk.png",
+        vfPostScale: "eq=contrast=1.45:brightness=-0.03:gamma=0.82:saturation=0.85,hue=h=-8:s=0.95,colorbalance=gs=0.16:bs=-0.05:rs=-0.08:gh=0.04,noise=c0s=18:c1s=12:allf=t",
         encodeArgs: ["-r", "24", "-c:v", "libx264", "-b:v", "300k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
                      "-c:a", "aac", "-b:a", "32k"]
       },
@@ -692,7 +935,7 @@
         // Радиальной виньетки НЕТ (круглый артефакт на фото в squash).
         width: 480, height: 640,
         scaleFlags: "",
-        vfPostScale: "eq=contrast=1.6:brightness=0.08:gamma=0.88:saturation=1.25,colorbalance=rs=0.08:rh=0.10:gs=0.02:bs=-0.08,noise=c0s=10:allf=t",
+        vfPostScale: "eq=contrast=1.45:brightness=-0.04:gamma=0.78:saturation=0.90,colorbalance=rh=0.18:gh=0.06:bs=-0.12:rs=0.06,noise=c0s=8:allf=t",
         encodeArgs: ["-r", "24", "-c:v", "libx264", "-b:v", "350k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
                      "-c:a", "aac", "-b:a", "48k"]
       },
@@ -704,7 +947,7 @@
         // тёплые света. Без зерна, чистый кинематографичный кадр.
         width: 480, height: 640,
         scaleFlags: "",
-        vfPostScale: "eq=contrast=1.05:brightness=0.06:gamma=0.92:saturation=1.1,colorbalance=rs=-0.10:gs=0.03:bs=0.10:rh=0.05:gh=-0.02:bh=-0.04",
+        vfPostScale: "eq=contrast=1.10:brightness=0.02:gamma=0.94:saturation=0.92,colorbalance=rs=-0.08:gs=0.05:bs=0.09:rh=0.12:gh=0.04:bh=-0.08,noise=c0s=7:c1s=5:allf=t",
         encodeArgs: ["-r", "24", "-c:v", "libx264", "-b:v", "350k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
                      "-c:a", "aac", "-b:a", "48k"]
       },
@@ -719,7 +962,7 @@
         // матовость эмульсии. Только eq/noise/colorbalance/hue — стабильно.
         width: 480, height: 360,
         scaleFlags: "",
-        vfPostScale: "eq=contrast=1.12:brightness=0.03:gamma=1.04:saturation=1.25,hue=h=-1:s=1.03,colorbalance=rs=0.04:rh=0.05:gs=0.03:bs=-0.04,noise=c0s=20:c1s=14:allf=t",
+        vfPostScale: "eq=contrast=1.05:brightness=0.03:gamma=1.05:saturation=1.10,hue=h=-1:s=1.02,colorbalance=rs=0.04:rh=0.06:gs=0.03:bs=-0.03,noise=c0s=12:c1s=9:allf=t",
         encodeArgs: ["-r", "24", "-c:v", "libx264", "-b:v", "340k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
                      "-c:a", "aac", "-b:a", "48k"]
       },
@@ -730,7 +973,7 @@
         // (colorbalance в красный/зелёный), лёгкое зерно плёнки.
         width: 480, height: 480,
         scaleFlags: "",
-        vfPostScale: "eq=contrast=0.85:brightness=0.12:saturation=0.9:gamma=0.95,colorbalance=rs=0.08:gs=0.05:bs=-0.06:rh=0.05,noise=c0s=12:allf=t",
+        vfPostScale: "eq=contrast=0.86:brightness=0.10:gamma=1.10:saturation=0.82,colorbalance=rs=0.06:gs=0.04:bs=-0.03:rh=0.09:gh=0.05,noise=c0s=8:allf=t",
         encodeArgs: ["-r", "24", "-c:v", "libx264", "-b:v", "300k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
                      "-c:a", "aac", "-b:a", "48k"]
       },
@@ -740,7 +983,7 @@
         // красно-жёлтый сдвиг), приподнятый контраст, среднее зерно.
         width: 480, height: 360,
         scaleFlags: "",
-        vfPostScale: "eq=contrast=1.2:saturation=1.35:brightness=0.04,hue=h=-2,colorbalance=rs=0.06:rh=0.05:gs=0.02:bh=-0.04,noise=c0s=18:allf=t",
+        vfPostScale: "eq=contrast=1.18:brightness=0.02:gamma=0.96:saturation=1.25,hue=h=-3:s=1.04,colorbalance=rs=0.09:rh=0.10:gs=0.03:bs=-0.08:bh=-0.05,noise=c0s=12:allf=t",
         encodeArgs: ["-r", "24", "-c:v", "libx264", "-b:v", "320k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
                      "-c:a", "aac", "-b:a", "48k"]
       },
@@ -751,7 +994,7 @@
         // boxblur убран (крашил wasm), мягкость плёнки через gamma=1.08.
         width: 360, height: 270,
         scaleFlags: "",
-        vfPostScale: "eq=contrast=1.15:brightness=0.05:saturation=0.8:gamma=1.08,colorbalance=rs=0.05:rh=0.04:bs=-0.03,noise=c0s=35:c1s=25:allf=t",
+        vfPostScale: "eq=contrast=1.06:brightness=0.06:gamma=1.12:saturation=0.75,colorbalance=rs=0.08:rh=0.08:gs=0.04:bs=-0.05,noise=c0s=24:c1s=18:allf=t",
         encodeArgs: ["-r", "16", "-c:v", "libx264", "-b:v", "220k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
                      "-c:a", "aac", "-b:a", "32k"]
       },
@@ -764,7 +1007,7 @@
         // Грубое зерно старой бумаги.
         width: 480, height: 360,
         scaleFlags: "",
-        vfPostScale: "eq=contrast=1.1:brightness=0.03:saturation=0.25,colorbalance=rs=0.35:gs=0.20:bs=-0.10:rh=0.15:gh=0.05,noise=c0s=22:allf=t",
+        vfPostScale: "eq=contrast=0.95:brightness=0.05:gamma=1.10:saturation=0.12,colorbalance=rs=0.30:gs=0.18:bs=-0.12:rh=0.12:gh=0.05,noise=c0s=13:allf=t",
         encodeArgs: ["-r", "24", "-c:v", "libx264", "-b:v", "280k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
                      "-c:a", "aac", "-b:a", "48k"]
       },
@@ -779,7 +1022,8 @@
         // контраст 1.45.
         width: 360, height: 270,
         scaleFlags: "",
-        vfPostScale: "eq=contrast=1.45:brightness=-0.10:gamma=0.88:saturation=0.08,colorbalance=gs=0.10:bs=0.12:rs=-0.05,noise=c0s=38:c1s=28:allf=t",
+        overlayFile: "overlay_doc.png",
+        vfPostScale: "eq=contrast=1.55:brightness=-0.05:gamma=0.82:saturation=0.05,colorbalance=gs=0.10:bs=0.12:rs=-0.06,noise=c0s=22:c1s=18:allf=t",
         encodeArgs: ["-r", "24", "-c:v", "libx264", "-b:v", "240k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
                      "-c:a", "aac", "-b:a", "48k"]
       },
@@ -795,7 +1039,7 @@
         // убран, мягкость старой оптики эмулируется через gamma<1.
         width: 480, height: 360,
         scaleFlags: "",
-        vfPostScale: "eq=contrast=1.18:brightness=0.04:gamma=0.97:saturation=0.0,colorbalance=rs=0.06:gs=0.03:rh=0.05,noise=c0s=24:allf=t",
+        vfPostScale: "eq=contrast=1.20:brightness=0.02:gamma=1.02:saturation=0,colorbalance=rs=0.04:gs=0.02:rh=0.03,noise=c0s=14:allf=t",
         encodeArgs: ["-r", "24", "-c:v", "libx264", "-b:v", "300k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
                      "-c:a", "aac", "-b:a", "48k"]
       },
@@ -807,7 +1051,7 @@
         // для инверсии — negate (есть в любой сборке). Поверх — лёгкое зерно.
         width: 480, height: 360,
         scaleFlags: "",
-        vfPostScale: "negate,eq=contrast=1.1:saturation=1.1,noise=c0s=14:allf=t",
+        vfPostScale: "negate,eq=contrast=1.18:brightness=-0.02:gamma=0.95:saturation=1.15,hue=h=8:s=1.1,noise=c0s=10:allf=t",
         encodeArgs: ["-r", "24", "-c:v", "libx264", "-b:v", "280k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
                      "-c:a", "aac", "-b:a", "48k"]
       },
@@ -821,7 +1065,7 @@
         // gamma=1.1.
         width: 360, height: 360,
         scaleFlags: "",
-        vfPostScale: "eq=contrast=0.9:brightness=0.02:saturation=0.12:gamma=1.1,colorbalance=bs=0.06:gs=0.03:rs=-0.03,noise=c0s=32:c1s=24:allf=t",
+        vfPostScale: "eq=contrast=0.82:brightness=0.08:gamma=1.18:saturation=0.05,colorbalance=bs=0.10:gs=0.05:rs=-0.04,noise=c0s=18:c1s=14:allf=t",
         encodeArgs: ["-r", "16", "-c:v", "libx264", "-b:v", "220k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
                      "-c:a", "aac", "-b:a", "32k"]
       },
@@ -832,7 +1076,7 @@
         // boxblur убран (крашил wasm), мягкость через gamma=1.0 + низкий контраст.
         width: 360, height: 360,
         scaleFlags: "",
-        vfPostScale: "eq=contrast=0.8:brightness=0.06:saturation=0.18:gamma=1.0,colorbalance=rs=0.18:gs=0.10:bs=-0.08:rh=0.06,noise=c0s=26:allf=t",
+        vfPostScale: "eq=contrast=0.72:brightness=0.10:gamma=1.18:saturation=0.08,colorbalance=rs=0.22:gs=0.12:bs=-0.10:rh=0.08,noise=c0s=12:allf=t",
         encodeArgs: ["-r", "16", "-c:v", "libx264", "-b:v", "200k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
                      "-c:a", "aac", "-b:a", "32k"]
       },
@@ -850,7 +1094,7 @@
         //   Grain=19, Size=25 → умеренное зерно (noise c0s=20).
         width: 480, height: 640,
         scaleFlags: "",
-        vfPostScale: "eq=contrast=1.25:brightness=-0.05:gamma=0.95:saturation=0.95,colorbalance=gs=0.03:bs=0.08:rh=0.03:rs=-0.02,noise=c0s=20:allf=t",
+        vfPostScale: "eq=contrast=1.12:brightness=-0.04:gamma=1.02:saturation=0.65,colorbalance=gs=0.05:bs=0.10:rh=0.02:rs=-0.03,noise=c0s=10:allf=t",
         encodeArgs: ["-r", "24", "-c:v", "libx264", "-b:v", "350k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
                      "-c:a", "aac", "-b:a", "48k"]
       },
@@ -868,7 +1112,7 @@
         width: 480, height: 640,
         scaleFlags: "",
         overlayFile: "overlay_japan.png",
-        vfPostScale: "eq=contrast=1.15:saturation=0.85:gamma=1.05,colorbalance=gs=0.04:bs=0.05:rs=-0.02,hue=s=0.9,noise=c0s=16:c1s=10:allf=t",
+        vfPostScale: "eq=contrast=1.08:brightness=0.02:saturation=0.72:gamma=1.08,colorbalance=gs=0.06:bs=0.07:rs=-0.03,hue=h=2:s=0.88,noise=c0s=12:c1s=8:allf=t",
         encodeArgs: ["-r", "24", "-c:v", "libx264", "-b:v", "340k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
                      "-c:a", "aac", "-b:a", "48k"]
       },
@@ -887,7 +1131,7 @@
         width: 480, height: 640,
         scaleFlags: "",
         overlayFile: "overlay_filmscratch.png",
-        vfPostScale: "eq=contrast=1.35:saturation=0:brightness=0.06:gamma=1.2,noise=c0s=20:allf=t",
+        vfPostScale: "eq=contrast=1.28:saturation=0:brightness=0.03:gamma=1.08,noise=c0s=15:allf=t",
         encodeArgs: ["-r", "24", "-c:v", "libx264", "-b:v", "340k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
                      "-c:a", "aac", "-b:a", "48k"]
       }
@@ -947,7 +1191,9 @@
     // PNG грузится в виртуальную FS ffmpeg один раз — см. ensureOverlayLoaded.
     function buildOverlayFilterComplex(preset) {
       const base = buildVideoFilter(preset);
-      return `[0:v]${base}[base];[base][1:v]overlay=0:0[out]`;
+      // Масштабируем служебный слой до фактического кадра. Это защищает от
+      // несовпадения размеров PNG и пресета после будущей смены разрешения.
+      return `[0:v]${base}[base];[1:v]scale=${preset.width}:${preset.height}:flags=neighbor[overlay];[base][overlay]overlay=0:0[out]`;
     }
 
     document.querySelectorAll(".preset").forEach(b => {
@@ -1070,18 +1316,24 @@
     }
 
     // ── Подписка & lifetime-лимиты ─────────────────────────────
-    // FREE: 10 обработок за всё время + бонус +5 за реферальную ссылку.
-    // PREMIUM: безлимит на 30 дней (49р). Активация по ID платежа ЮKassa.
+    // FREE: 25 обработок за всё время + бонус +5 за реферальную ссылку.
+    // PREMIUM: безлимит на 30 дней (49р). Активация только после оплаты ЮKassa.
     // Рефералка: уникальный код юзера → ссылка вида t.me/shakalbot?start=REF123
     // При переходе по ссылке — +5 к lifetime-лимиту (localStorage, t.me/start).
     const LS_LIMIT_KEY = "shakal_used";     // { total }
     const LS_REF_KEY = "shakal_ref";        // { code, credited (Set кодов) }
     const LS_SUB_KEY = "shakal_sub";        // { expiresAt, paymentId, activatedAt }
-    const LIFETIME_LIMIT = 10;
+    const LS_PENDING_PAYMENT_KEY = "shakal_pending_payment";
+    const LIFETIME_LIMIT = 25;
     const REF_BONUS = 5;
     const SUB_DAYS = 30;
     const SUB_PRICE = 49;
-    const YOOKASSA_LINK = "https://yoomoney.ru/quickpay/shop-widget?writer=seller&targets=%D0%9F%D1%80%D0%B5%D0%BC%D0%B8%D1%83%D0%BC-%D0%BF%D0%BE%D0%B4%D0%BF%D0%B8%D1%81%D0%BA%D0%B0%20SHAKAL%20%281%20%D0%BC%D0%B5%D1%81%D1%8F%D1%86%29&targets-hint=&default-sum=49&button-text=11&payment-type-choice=on&mobile-payment-type-choice=on&hint=&successURL=&quickpay=shop&account=4100118575154569";
+    const OWNER_TG_ID = 8039736452;
+    // Нужен серверный endpoint: он создает платеж в ЮKassa и возвращает confirmation_url.
+    // Пример ответа: { payment_id: "...", confirmation_url: "https://yoomoney.ru/..." }
+    const PAYMENT_CREATE_ENDPOINT = "";
+    // Endpoint проверяет платеж у ЮKassa по payment_id и возвращает { paid: true } после payment.succeeded.
+    const PAYMENT_STATUS_ENDPOINT = "";
 
     // ── Генерация/загрузка уникального реферального кода ──
     function getRefCode() {
@@ -1148,8 +1400,24 @@
       try { localStorage.setItem(LS_SUB_KEY, JSON.stringify(sub)); } catch (_) {}
     }
 
+    function isOwnerUser() {
+      return getTelegramUserId() === OWNER_TG_ID;
+    }
+
+    function isLocalRun() {
+      const host = window.location.hostname;
+      const protocol = window.location.protocol;
+      return protocol === "file:" ||
+        host === "localhost" ||
+        host === "127.0.0.1" ||
+        host === "::1" ||
+        host.startsWith("172.") ||
+        host.startsWith("192.168.") ||
+        host.startsWith("10.");
+    }
+
     function isPremiumActive() {
-      return loadSubscription() !== null;
+      return isOwnerUser() || isLocalRun() || loadSubscription() !== null;
     }
 
     function getEffectiveLimit() {
@@ -1185,15 +1453,21 @@
       const used = loadLimitTotal();
       const limit = getEffectiveLimit();
 
-      if (premium && sub) {
+      if (premium) {
         subPanel.className = "sub-panel premium";
         subBadge.className = "sub-badge premium";
         subBadge.textContent = "⭐ PREMIUM";
         subActionBtn.className = "sub-action manage";
-        subActionBtn.textContent = "Управление";
+        subActionBtn.textContent = "Продлить";
         subTitle.textContent = "⭐ Премиум-доступ";
-        const daysLeft = Math.max(0, Math.ceil((sub.expiresAt - Date.now()) / (1000 * 60 * 60 * 24)));
-        subDetail.textContent = `Безлимит · осталось ${daysLeft} дн.`;
+        if (isOwnerUser()) {
+          subDetail.textContent = "Безлимит для владельца";
+        } else if (isLocalRun()) {
+          subDetail.textContent = "Безлимит для локального теста";
+        } else {
+          const daysLeft = Math.max(0, Math.ceil((sub.expiresAt - Date.now()) / (1000 * 60 * 60 * 24)));
+          subDetail.textContent = `Безлимит · осталось ${daysLeft} дн.`;
+        }
         subLimitFill.style.display = "none";
         subLimitFill.parentElement.style.display = "none";
         subActivateRow.classList.remove("active");
@@ -1219,69 +1493,93 @@
       }
     }
 
+    function getTelegramUserId() {
+      return tg && tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : null;
+    }
+
+    async function activatePremium(paymentId) {
+      const now = Date.now();
+      const oldSub = loadSubscription();
+      const base = oldSub && oldSub.expiresAt > now ? oldSub.expiresAt : now;
+      const expiresAt = base + SUB_DAYS * 24 * 60 * 60 * 1000;
+      saveSubscription({
+        paymentId: paymentId || "yookassa",
+        activatedAt: now,
+        expiresAt
+      });
+      localStorage.removeItem(LS_PENDING_PAYMENT_KEY);
+      const daysTotal = Math.ceil((expiresAt - now) / (1000 * 60 * 60 * 24));
+      setTitle("⭐ ПРЕМИУМ");
+      setStatus(`Подписка активирована на ${daysTotal} дней! Безлимит включён.`);
+      renderSubPanel();
+    }
+
+    async function checkPendingPayment() {
+      if (!PAYMENT_STATUS_ENDPOINT) return;
+      let pending = null;
+      try {
+        pending = JSON.parse(localStorage.getItem(LS_PENDING_PAYMENT_KEY) || "null");
+      } catch (_) {}
+      if (!pending || !pending.payment_id) return;
+
+      try {
+        const url = new URL(PAYMENT_STATUS_ENDPOINT, window.location.href);
+        url.searchParams.set("payment_id", pending.payment_id);
+        const res = await fetch(url.toString(), { credentials: "include" });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data && data.paid) await activatePremium(pending.payment_id);
+      } catch (err) {
+        console.warn("Не удалось проверить платеж:", err);
+      }
+    }
+
+    async function startPayment() {
+      if (!PAYMENT_CREATE_ENDPOINT) {
+        setTitle("⭐ ПРЕМИУМ");
+        setStatus("Платежный сервер ЮKassa ещё не подключён. Нужен endpoint, который создаёт ссылку оплаты на 49р.");
+        return;
+      }
+
+      subActionBtn.disabled = true;
+      setStatus('<span class="spinner"></span>Создаю ссылку оплаты ЮKassa...');
+      try {
+        const res = await fetch(PAYMENT_CREATE_ENDPOINT, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            product: "shakal_premium_month",
+            amount: SUB_PRICE,
+            currency: "RUB",
+            telegram_user_id: getTelegramUserId(),
+            return_url: window.location.href.split("#")[0]
+          })
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        if (!data || !data.confirmation_url) throw new Error("Сервер не вернул confirmation_url");
+        if (data.payment_id) {
+          localStorage.setItem(LS_PENDING_PAYMENT_KEY, JSON.stringify({ payment_id: data.payment_id, createdAt: Date.now() }));
+        }
+        window.location.href = data.confirmation_url;
+      } catch (err) {
+        setStatus("❌ Не удалось создать оплату: " + (err && err.message ? err.message : err));
+      } finally {
+        subActionBtn.disabled = false;
+      }
+    }
+
     subActionBtn.addEventListener("click", () => {
       if (isPremiumActive()) {
-        if (subActivateRow.classList.contains("active")) {
-          subActivateRow.classList.remove("active");
-          subActivateInput.classList.remove("error");
-          subActivateInput.value = "";
-        } else {
-          subActivateRow.classList.add("active");
-          subActivateInput.placeholder = "ID платежа для продления";
-          subActivateInput.focus();
-        }
+        startPayment();
         return;
       }
-      if (subActivateRow.classList.contains("active")) {
-        subActivateRow.classList.remove("active");
-        subActivateInput.classList.remove("error");
-        subActivateInput.value = "";
-        return;
-      }
-      if (getRemaining() <= 0) {
-        subActivateRow.classList.add("active");
-        subActivateInput.placeholder = `Оплати ${SUB_PRICE}р на ЮMoney и введи ID платежа`;
-        subActivateInput.focus();
-        return;
-      }
-      try {
-        window.open(YOOKASSA_LINK, "_blank");
-      } catch (_) {
-        setStatus("🔗 Открой ссылку для оплаты: " + YOOKASSA_LINK);
-      }
-      setTimeout(() => {
-        subActivateRow.classList.add("active");
-        subActivateInput.placeholder = "Оплати и введи ID платежа";
-        subActivateInput.focus();
-      }, 500);
+      startPayment();
     });
 
     subActivateBtn.addEventListener("click", () => {
-      const code = subActivateInput.value.trim();
-      if (!code || code.length < 5) {
-        subActivateInput.classList.add("error");
-        subActivateInput.placeholder = "ID платежа слишком короткий";
-        return;
-      }
-      const now = Date.now();
-      const isRenewal = isPremiumActive();
-      const oldSub = loadSubscription();
-      const expiresAt = now + SUB_DAYS * 24 * 60 * 60 * 1000;
-      const newExpiry = isRenewal ? oldSub.expiresAt + SUB_DAYS * 24 * 60 * 60 * 1000 : expiresAt;
-
-      saveSubscription({
-        paymentId: code,
-        activatedAt: now,
-        expiresAt: newExpiry
-      });
-
-      const daysTotal = Math.ceil((newExpiry - now) / (1000 * 60 * 60 * 24));
-      setTitle("⭐ ПРЕМИУМ");
-      setStatus(`Подписка активирована на ${daysTotal} дней! Безлимит включён.`);
-      subActivateInput.classList.remove("error");
-      subActivateInput.value = "";
-      subActivateRow.classList.remove("active");
-      renderSubPanel();
+      checkPendingPayment();
     });
 
     subActivateInput.addEventListener("input", () => {
@@ -1290,6 +1588,128 @@
     subActivateInput.addEventListener("keydown", (e) => {
       if (e.key === "Enter") subActivateBtn.click();
     });
+
+    // ── Админ-панель ────────────────────────────────────────
+    const ADMIN_TG_ID = 8039736452;
+    // Ключи для симулированной «серверной» статистики (localStorage).
+    const LS_ADMIN_KEY = "shakal_admin_stats";
+
+    function loadAdminStats() {
+      try {
+        const raw = localStorage.getItem(LS_ADMIN_KEY);
+        return raw ? JSON.parse(raw) : {
+          totalUsers: 0, premiumUsers: 0,
+          refTransitions: {}, // {refCode: count}
+          estimatedRevenue: 0,
+          sessionsToday: 0
+        };
+      } catch (_) {
+        return { totalUsers: 0, premiumUsers: 0, refTransitions: {}, estimatedRevenue: 0, sessionsToday: 0 };
+      }
+    }
+
+    function saveAdminStats(stats) {
+      try { localStorage.setItem(LS_ADMIN_KEY, JSON.stringify(stats)); } catch (_) {}
+    }
+
+    function renderAdminPanel() {
+      const stats = loadAdminStats();
+      const freeUsers = stats.totalUsers - stats.premiumUsers;
+      const totalRefs = Object.values(stats.refTransitions).reduce((s, c) => s + c, 0);
+
+      adminStatUsers.textContent = stats.totalUsers;
+      adminStatPremium.textContent = stats.premiumUsers;
+      adminStatFree.textContent = Math.max(0, freeUsers);
+      adminStatRefs.textContent = totalRefs;
+      adminStatRevenue.textContent = `${stats.estimatedRevenue}р`;
+      adminStatSessions.textContent = stats.sessionsToday;
+
+      // Топ-3 рефералов
+      const entries = Object.entries(stats.refTransitions)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 3);
+      adminRefTopList.innerHTML = entries.length === 0
+        ? `<div class="admin-ref-row"><span class="ref-code">—</span><span class="ref-count">0 переходов</span></div>`
+        : entries.map(([code, count], i) => {
+            const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : "🥉";
+            return `<div class="admin-ref-row"><span class="ref-code">${medal} ${code}</span><span class="ref-count">${count} переходов</span></div>`;
+          }).join("");
+    }
+
+    // Проверка: является ли текущий юзер админом?
+    function checkIsAdmin() {
+      if (!tg || !tg.initDataUnsafe || !tg.initDataUnsafe.user) return false;
+      return tg.initDataUnsafe.user.id === ADMIN_TG_ID;
+    }
+
+    if (checkIsAdmin()) {
+      adminWrap.classList.add("active");
+      adminIdDisplay.textContent = "ID " + ADMIN_TG_ID;
+      // Регистрируем текущую сессию как «сессию сегодня».
+      const stats = loadAdminStats();
+      stats.sessionsToday += 1;
+      saveAdminStats(stats);
+      renderAdminPanel();
+
+      // Кнопка: симулировать нового юзера
+      adminSimUserBtn.addEventListener("click", () => {
+        const stats = loadAdminStats();
+        stats.totalUsers += 1;
+        // 30% шанс что это премиум-юзер для демо.
+        if (Math.random() < 0.3) {
+          stats.premiumUsers += 1;
+          stats.estimatedRevenue += SUB_PRICE;
+        }
+        saveAdminStats(stats);
+        renderAdminPanel();
+        setStatus("🧪 Тестовый юзер добавлен. Статистика обновлена.");
+      });
+
+      // Кнопка: сброс статистики
+      adminResetBtn.addEventListener("click", () => {
+        if (confirm("Сбросить ВСЮ админ-статистику?")) {
+          localStorage.removeItem(LS_ADMIN_KEY);
+          renderAdminPanel();
+          setStatus("🗑️ Статистика сброшена.");
+        }
+      });
+    }
+
+    // При каждой активации подписки — обновляем админ-статистику.
+    const origSubActivateHandler = subActivateBtn.onclick;
+    subActivateBtn.addEventListener("click", () => {
+      // После успешной активации (check inside the original handler via setTimeout)
+      setTimeout(() => {
+        if (isPremiumActive()) {
+          const stats = loadAdminStats();
+          stats.premiumUsers += 1;
+          stats.estimatedRevenue += SUB_PRICE;
+          saveAdminStats(stats);
+          if (adminWrap.classList.contains("active")) renderAdminPanel();
+        }
+      }, 100);
+    });
+
+    // При реферальном переходе — обновляем счётчик.
+    // applyRefBonus уже зачисляет +5 юзеру — добавляем +1 в stats.refTransitions.
+    if (parseStartParam()) {
+      const refCode = parseStartParam();
+      const stats = loadAdminStats();
+      stats.refTransitions[refCode] = (stats.refTransitions[refCode] || 0) + 1;
+      saveAdminStats(stats);
+      if (adminWrap.classList.contains("active")) renderAdminPanel();
+    }
+
+    if (!checkIsAdmin()) {
+      // Не-админы: регистрируем юзера при первом заходе (по uid).
+      const LS_USER_KEY = "shakal_user_registered";
+      if (!localStorage.getItem(LS_USER_KEY)) {
+        try { localStorage.setItem(LS_USER_KEY, "1"); } catch (_) {}
+        const stats = loadAdminStats();
+        stats.totalUsers += 1;
+        saveAdminStats(stats);
+      }
+    }
 
     // Кнопка «Поделиться реферальной ссылкой»
     const refShareBtn = $("refShareBtn");
@@ -1332,6 +1752,11 @@
       renderSubPanel();
     })();
 
+    // Отрисовка панели подписки при старте.
+    renderSubPanel();
+    checkPendingPayment();
+    window.addEventListener("focus", checkPendingPayment);
+
     // ── Очередь файлов ────────────────────────────────────────
     // selectedFiles: массив выбранных файлов. Пользователь может добавить
     // несколько файлов сразу (input[multiple]) или по одному через камеру.
@@ -1357,7 +1782,7 @@
     }
 
     function handleFileSelected(e) {
-      const files = e.target.files;
+      const files = Array.from(e.target.files || []);
       if (!files || files.length === 0) return;
       // Очищаем input сразу, чтобы повторный выбор того же файла снова триггерил change.
       e.target.value = "";
@@ -1534,15 +1959,16 @@ const remaining = getRemaining();
     // ── Обработка очереди ────────────────────────────────────
     processBtn.addEventListener("click", async () => {
       if (selectedFiles.length === 0) return;
-      // Берём только ожидающие файлы (повторная обработка после ошибки и т.п.).
-      const pending = selectedFiles.filter(f => f.status === "pending");
+      // Обрабатываем текущую очередь заново. Это позволяет выбрать другой
+      // фильтр и прогнать то же фото/видео без повторной загрузки.
+      const pending = selectedFiles;
       if (pending.length === 0) {
-        setStatus(" все файлы уже обработаны. Добавь ещё или нажми «Ещё раз».");
+        setStatus("Добавь файл и выбери фильтр.");
         return;
       }
 
       // ── Проверка дневного лимита ──────────────────────────
-      const remaining = getDailyRemaining();
+      const remaining = getRemaining();
       const filesToProcess = Math.min(pending.length, remaining === Infinity ? pending.length : remaining);
       if (filesToProcess === 0) {
         setStatus(`❌ Лимит исчерпан (${getEffectiveLimit()} обработок всего). Оформи премиум — безлимит за ${SUB_PRICE}р/мес.`);
@@ -1599,6 +2025,7 @@ const remaining = getRemaining();
 
           setTitle(`ПРЕВРАЩАЮ ${i + 1}/${actualTotal}`);
           setStatus(`⚙️ Файл ${i + 1} из ${actualTotal}: ${file.name}`);
+          entry.error = "";
           updateQueueState(entry.id, "processing");
           setProgress(0);
 
@@ -1606,7 +2033,7 @@ const remaining = getRemaining();
             // Пред-уменьшаем большие фото через Web Worker (без блокировки UI).
             const fileToProcess = await maybeShrinkImageViaWorker(file);
 
-            const inName = "input" + getExt(fileToProcess.name);
+            const inName = "input" + getExt(fileToProcess.name, fileToProcess.type);
             const outName = isImage ? "output.jpg" : "output.mp4";
             await ff.writeFile(inName, await fetchFile(fileToProcess));
 
@@ -1658,10 +2085,13 @@ const remaining = getRemaining();
             succeeded++;
             updateQueueState(entry.id, "done");
           } catch (err) {
+            const errorMessage = err && err.message ? err.message : String(err);
             console.error(`Ошибка обработки файла ${file.name}:`, err);
             failed++;
             rollbackSlot();
+            entry.error = errorMessage;
             updateQueueState(entry.id, "error");
+            setStatus(`❌ Ошибка файла «${file.name}»: ${errorMessage}`);
           }
           setProgress((i + 1) / actualTotal);
         }
@@ -1676,8 +2106,11 @@ const remaining = getRemaining();
 
         // ── Результат ──────────────────────────────────────
         if (succeeded === 0) {
+          const firstError = selectedFiles.find(f => f.status === "error" && f.error);
           setTitle("ОШИБКА");
-          setStatus(`❌ Ни один файл не обработан${failed > 0 ? ` (ошибок: ${failed})` : ""}.`);
+          setStatus(firstError
+            ? `❌ Не обработано: ${firstError.error}`
+            : `❌ Ни один файл не обработан${failed > 0 ? ` (ошибок: ${failed})` : ""}.`);
         } else {
           setTitle("✓ ГОТОВО");
           // Если один успешный файл — показываем его превью как раньше.
@@ -1701,9 +2134,9 @@ const remaining = getRemaining();
           resultWrap.classList.add("active");
           resultWrap.scrollIntoView({ behavior: "smooth", block: "nearest" });
           if (succeeded > 1) {
-            setStatus(`✅ Готово: ${succeeded} из ${actualTotal} файла(ов)${failed > 0 ? `, ошибок: ${failed}` : ""}. «Сохранить» скачает все файлы по очереди.`);
+            setStatus(`✅ Готово: ${succeeded} из ${actualTotal} файла(ов)${failed > 0 ? `, ошибок: ${failed}` : ""}. Можно выбрать другой фильтр и обработать ещё раз.`);
           } else if (failed === 0) {
-            setStatus(`✅ Готово: ${succeeded} из ${actualTotal}. Сохрани или отправь.`);
+            setStatus(`✅ Готово. Можно сохранить или выбрать другой фильтр и обработать ещё раз.`);
           } else {
             setStatus(`✅ Готово: ${succeeded} из ${actualTotal}, ошибок: ${failed}.`);
           }
@@ -1716,18 +2149,19 @@ const remaining = getRemaining();
         isProcessing = false;
         addMoreBtn.disabled = false;
         cancelBtn.disabled = selectedFiles.length === 0;
-        processBtn.disabled = selectedFiles.length === 0;
-        // Кнопка «Обработать» снова активна, если есть неотработанные файлы.
-        const stillPending = selectedFiles.some(f => f.status === "pending");
-        processBtn.disabled = !stillPending;
+        processBtn.disabled = selectedFiles.length === 0 || getRemaining() <= 0;
         // Обновляем панель подписки (счётчик мог измениться).
         renderSubPanel();
       }
     });
 
-    function getExt(name) {
+    function getExt(name, type) {
       const m = /\.([a-z0-9]{2,4})$/i.exec(name);
-      return m ? "." + m[1].toLowerCase() : ".mp4";
+      if (m) return "." + m[1].toLowerCase();
+      if (type === "image/png") return ".png";
+      if (type === "image/webp") return ".webp";
+      if (type && type.startsWith("image/")) return ".jpg";
+      return ".mp4";
     }
 
     // ── Пред-уменьшение больших фото через Web Worker ──────────
@@ -1825,7 +2259,7 @@ const remaining = getRemaining();
           }
         };
         worker.addEventListener("message", handler);
-        worker.postMessage({ file, isPng }, [file]);
+        worker.postMessage({ file, isPng });
       });
     }
 
