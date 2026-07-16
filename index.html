@@ -825,7 +825,7 @@
     const VENDOR_BASE = "vendor";
     // Cache-busting: увеличь число, если файлы в vendor/ обновились, а
     // браузер упорно тянет их из кеша.
-      const ASSET_VERSION = "v3";
+      const ASSET_VERSION = "v7";
 
     function loadScript(url, timeoutMs = 20000) {
       return new Promise((resolve, reject) => {
@@ -1349,6 +1349,14 @@
     let ffmpeg = null;
     let ffmpegReady = false;
     let fetchFile = null;
+
+    function resetFFmpegEngine() {
+      if (ffmpeg) {
+        try { ffmpeg.terminate(); } catch (_) {}
+      }
+      ffmpeg = null;
+      ffmpegReady = false;
+    }
 
     async function ensureFFmpeg() {
       if (ffmpegReady) return ffmpeg;
@@ -2112,6 +2120,11 @@ const remaining = getRemaining();
       }
 
       setAppView("queue");
+      // Telegram повторно использует WebView у постоянной кнопки меню.
+      // Старый wasm-инстанс после тяжёлого фильтра иногда остаётся с
+      // повреждённой памятью и падает с Out of bounds memory access.
+      // Каждая новая партия стартует с чистого FFmpeg worker.
+      resetFFmpegEngine();
       isProcessing = true;
       resultWrap.classList.remove("active");
       progressWrap.classList.add("active");
@@ -2280,6 +2293,8 @@ const remaining = getRemaining();
         setTitle("ОШИБКА");
       } finally {
         isProcessing = false;
+        // Не держим повреждённую wasm-память до следующего открытия/запуска.
+        resetFFmpegEngine();
         addMoreBtn.disabled = false;
         cancelBtn.disabled = selectedFiles.length === 0;
         processBtn.disabled = selectedFiles.length === 0 || getRemaining() <= 0;
