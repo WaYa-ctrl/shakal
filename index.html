@@ -1707,6 +1707,10 @@
 
     // ── Админ-панель ────────────────────────────────────────
     const ADMIN_TG_ID = 8039736452;
+    // Публичный Mini App не должен показывать админ-интерфейс на основании
+    // initDataUnsafe. Настоящая админка включается только после появления
+    // backend-проверки Telegram.WebApp.initData; до этого закрыта fail-safe.
+    const PUBLIC_ADMIN_PANEL_ENABLED = false;
     // Ключи для симулированной «серверной» статистики (localStorage).
     const LS_ADMIN_KEY = "shakal_admin_stats";
 
@@ -1754,12 +1758,19 @@
 
     // Проверка: является ли текущий юзер админом?
     function checkIsAdmin() {
+      if (!PUBLIC_ADMIN_PANEL_ENABLED) return false;
       if (!tg || !tg.initDataUnsafe || !tg.initDataUnsafe.user) return false;
       return tg.initDataUnsafe.user.id === ADMIN_TG_ID;
     }
 
+    // Сбрасываем возможное восстановленное состояние WebView/bfcache, чтобы
+    // оба входа (кнопка профиля и клавиатура после /start) выглядели одинаково.
+    adminWrap.classList.remove("active");
+    adminWrap.setAttribute("aria-hidden", "true");
+
     if (checkIsAdmin()) {
       adminWrap.classList.add("active");
+      adminWrap.setAttribute("aria-hidden", "false");
       adminIdDisplay.textContent = "ID " + ADMIN_TG_ID;
       // Регистрируем текущую сессию как «сессию сегодня».
       const stats = loadAdminStats();
@@ -2455,7 +2466,51 @@ const remaining = getRemaining();
     // ── Скачать / поделиться / ещё раз ────────────────────────
     let lastBlob = null, lastFileName = "shkal.mp4";
 
-    downloadBtn.addEventListener("click", () => {
+    function isTelegramMobileClient() {
+      return !!(tg && (tg.platform === "android" || tg.platform === "ios"));
+    }
+
+    function getResultFiles() {
+      if (doneEntries.length > 1) {
+        return doneEntries.map(entry => new File(
+          [entry.blob], entry.fileName,
+          { type: entry.blob.type || "application/octet-stream" }
+        ));
+      }
+      if (!lastBlob) return [];
+      return [new File(
+        [lastBlob], lastFileName,
+        { type: lastBlob.type || "application/octet-stream" }
+      )];
+    }
+
+    downloadBtn.addEventListener("click", async () => {
+      // В Telegram Android/iOS обычный <a download> для blob: часто не
+      // скачивает файл, а заменяет Mini App страницей медиа. После этого
+      // интерфейс выглядит «сломавшимся» до повторного входа. На мобильном
+      // используем только системное меню Web Share и НЕ уходим на blob URL.
+      if (isTelegramMobileClient()) {
+        const files = getResultFiles();
+        if (files.length === 0) return;
+        const canShareFiles = !!navigator.share && (!navigator.canShare || navigator.canShare({ files }));
+        if (canShareFiles) {
+          try {
+            await navigator.share({ files, title: "Шакал 2007" });
+            setTitle("✓ ГОТОВО");
+            setStatus("Файл передан в системное меню. Выбери «Сохранить» или нужный чат.");
+            return;
+          } catch (e) {
+            if (e && e.name === "AbortError") return;
+            console.warn("Мобильное сохранение недоступно:", e && e.message);
+          }
+        }
+        const message = "Этот Telegram-клиент не поддерживает сохранение локального файла из Mini App. Нажми «Поделиться результатом» или обнови Telegram. Приложение останется открытым.";
+        setTitle("СОХРАНЕНИЕ");
+        setStatus(message);
+        if (tg && tg.showAlert) tg.showAlert(message);
+        return;
+      }
+
       // Если один результат — качаем файл как раньше.
       // Если несколько — качаем каждый файл отдельно (последовательно).
       if (doneEntries.length > 1) {
