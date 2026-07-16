@@ -513,9 +513,92 @@
     body[data-theme="night"] .sub-panel.premium { border-color:#ff2f88; background:linear-gradient(135deg,#321427,#181820); }
     body[data-theme="night"] .sub-badge.premium { background:#39182b; border-color:#ff2f88; color:#ff72ad; }
     body[data-theme="night"] .result-screen { border-color:#181820; box-shadow:inset 0 0 0 2px #08080d,inset 0 0 26px rgba(0,0,0,.85),0 0 0 2px #454755,0 0 16px rgba(117,87,255,.2),0 10px 26px rgba(0,0,0,.65); }
+
+    /* NIGHT — не перекраска, а три отдельных состояния compact mini app. */
+    .queue-preset-card, .queue-help-card { display:none; }
+    body[data-theme="night"] .phone { display:flex; flex-direction:column; min-height:min(900px,calc(100vh - 28px)); }
+    body[data-theme="night"] .topbar { order:0; padding:2px 2px 8px; border-bottom:1px solid #343540; }
+    body[data-theme="night"] .brand { font-size:13px; letter-spacing:1px; }
+    body[data-theme="night"] .screen { order:1; margin-top:12px; }
+    body[data-theme="night"] .source-grid { order:2; }
+    body[data-theme="night"] .section-kicker { order:3; }
+    body[data-theme="night"] .presets { order:4; }
+    body[data-theme="night"] .toggles { order:5; }
+    body[data-theme="night"] .action-grid { order:6; }
+    body[data-theme="night"] #subPanel { order:7; }
+    body[data-theme="night"] .ref-panel { order:8; }
+    body[data-theme="night"] .admin-wrap { order:9; }
+    body[data-theme="night"] .filename { order:2; text-align:left; margin:4px 0 8px; }
+    body[data-theme="night"] #queueWrap { order:3; }
+    body[data-theme="night"] .queue-preset-card { order:4; }
+    body[data-theme="night"] .queue-help-card { order:7; }
+    body[data-theme="night"] #resultWrap { order:1; }
+    body[data-theme="night"] .warn { order:10; margin-top:auto; opacity:.7; }
+
+    /* Экран 1 — выбор исходника и пресета. */
+    body[data-theme="night"][data-app-view="home"] #queueWrap,
+    body[data-theme="night"][data-app-view="home"] .filename,
+    body[data-theme="night"][data-app-view="home"] #resultWrap,
+    body[data-theme="night"][data-app-view="home"] .queue-preset-card,
+    body[data-theme="night"][data-app-view="home"] .queue-help-card { display:none !important; }
+    body[data-theme="night"][data-app-view="home"] .action-grid { grid-template-columns:1fr; }
+    body[data-theme="night"][data-app-view="home"] #cancelBtn { display:none; }
+    body[data-theme="night"][data-app-view="home"] #processBtn { min-height:48px; background:#7457ff; }
+
+    /* Экран 2 — самостоятельная очередь/прогресс. */
+    body[data-theme="night"][data-app-view="queue"] .source-grid,
+    body[data-theme="night"][data-app-view="queue"] .section-kicker,
+    body[data-theme="night"][data-app-view="queue"] .presets,
+    body[data-theme="night"][data-app-view="queue"] .toggles,
+    body[data-theme="night"][data-app-view="queue"] #subPanel,
+    body[data-theme="night"][data-app-view="queue"] .ref-panel,
+    body[data-theme="night"][data-app-view="queue"] .admin-wrap,
+    body[data-theme="night"][data-app-view="queue"] #resultWrap { display:none !important; }
+    body[data-theme="night"][data-app-view="queue"] .theme-switch,
+    body[data-theme="night"][data-app-view="result"] .theme-switch { display:none; }
+    body[data-theme="night"][data-app-view="queue"] .topbar::after {
+      content:"ОБРАБОТКА"; color:#6fe4ff; font-size:8px; letter-spacing:1px;
+    }
+    body[data-theme="night"][data-app-view="result"] .topbar::after {
+      content:"СОХРАНЕНО"; padding:5px 9px; border-radius:12px; background:#193428;
+      color:#9ce2ba; font-size:8px; letter-spacing:.5px;
+    }
+    body[data-theme="night"][data-app-view="queue"] #queueWrap { display:block !important; }
+    body[data-theme="night"][data-app-view="queue"] .filename { display:block; }
+    body[data-theme="night"][data-app-view="queue"] .queue-preset-card,
+    body[data-theme="night"][data-app-view="queue"] .queue-help-card { display:flex; }
+    body[data-theme="night"] .queue-preset-card,
+    body[data-theme="night"] .queue-help-card {
+      margin:10px 0 0; padding:12px; border:1px solid #3c3d49; border-radius:10px;
+      background:#17171f; color:#aeb0bd; justify-content:space-between; gap:12px;
+      font-size:10px; line-height:1.55;
+    }
+    body[data-theme="night"] .queue-preset-card strong,
+    body[data-theme="night"] .queue-help-card strong { color:#f5f5f7; display:block; font-size:11px; }
+    body[data-theme="night"][data-app-view="queue"] .action-grid { order:5; margin-top:12px !important; }
+    body[data-theme="night"][data-app-view="queue"] .queue-help-card { order:6; flex-direction:column; }
+
+    /* Экран 3 — результат как отдельная страница. */
+    body[data-theme="night"][data-app-view="result"] .screen,
+    body[data-theme="night"][data-app-view="result"] .source-grid,
+    body[data-theme="night"][data-app-view="result"] .section-kicker,
+    body[data-theme="night"][data-app-view="result"] .presets,
+    body[data-theme="night"][data-app-view="result"] .toggles,
+    body[data-theme="night"][data-app-view="result"] .filename,
+    body[data-theme="night"][data-app-view="result"] #queueWrap,
+    body[data-theme="night"][data-app-view="result"] .queue-preset-card,
+    body[data-theme="night"][data-app-view="result"] .queue-help-card,
+    body[data-theme="night"][data-app-view="result"] .action-grid,
+    body[data-theme="night"][data-app-view="result"] .admin-wrap { display:none !important; }
+    body[data-theme="night"][data-app-view="result"] #resultWrap { display:block !important; margin-top:14px; }
+    body[data-theme="night"][data-app-view="result"] .ref-panel { display:block; order:2; margin-top:14px !important; }
+    body[data-theme="night"][data-app-view="result"] #subPanel { display:flex; order:3; margin-top:12px; }
+    body[data-theme="night"][data-app-view="result"] .result-actions { grid-template-columns:1fr 1fr; }
+    body[data-theme="night"][data-app-view="result"] #shareBtn { grid-column:1/-1; background:#7457ff; }
+    body[data-theme="night"][data-app-view="result"] #againBtn { background:#292a35; }
 </style>
 </head>
-<body>
+<body data-app-view="home">
   <div class="phone">
     <div class="topbar">
       <div class="brand">📱 SHAKAL · 2007 EDITION</div>
@@ -556,7 +639,7 @@
          ранее крашили движок). -->
     <div class="section-kicker">ВЫБЕРИ ЭПОХУ</div>
     <div class="presets">
-      <button class="preset active" data-preset="q_2007">📱 2007<small>320×240</small></button>
+      <button class="preset active" data-preset="q_2007">📱 2007<small>176×144</small></button>
       <button class="preset" data-preset="q_nul">🕹️ Нулевые<small>480×360</small></button>
       <button class="preset" data-preset="q_vhs">📼 VHS<small>320×240</small></button>
       <button class="preset" data-preset="q_phonk">🌃 Phonk<small>320×426</small></button>
@@ -594,7 +677,7 @@
     </div>
 
     <!-- Рефералка: кнопка «Поделиться ссылкой» под панелью подписки. -->
-    <div style="margin-bottom:12px;">
+    <div class="ref-panel" style="margin-bottom:12px;">
       <button class="btn secondary" id="refShareBtn" style="margin-top:0; font-size:11px; padding:8px 10px;">🔗 Пригласи друга (+5 обработок)</button>
     </div>
 
@@ -682,10 +765,19 @@
       </div>
     </div>
 
+    <div class="queue-preset-card" aria-live="polite">
+      <span><strong>ТЕКУЩИЙ ПРЕСЕТ</strong><span id="queuePresetMeta">176 × 144 · 10 FPS</span></span>
+      <strong id="queuePresetName">2007</strong>
+    </div>
+    <div class="queue-help-card">
+      <span><strong>ПОКА ЖДЁШЬ</strong>Пригласи друга и получи +5 обработок.</span>
+      <button type="button" class="btn secondary" id="queueRefBtn" style="margin:0;padding:9px 10px;font-size:9px;">СКОПИРОВАТЬ ССЫЛКУ</button>
+    </div>
+
     <!-- Обработать + Отмена: две колонки. Отмена активна только когда
          выбран файл, до этого заблокирована. -->
     <div class="action-grid" style="margin-top:10px;">
-      <button class="btn amber" id="processBtn" disabled>🔧 Обработать</button>
+      <button class="btn amber" id="processBtn" disabled>ЗАШАКАЛИТЬ →</button>
       <button class="btn danger" id="cancelBtn" disabled>❌ Отмена</button>
     </div>
 
@@ -698,10 +790,10 @@
         <img class="result-video" id="resultImage" alt="" style="display:none;" />
       </div>
       <div class="result-actions">
-        <button class="btn" id="shareBtn">💾 Сохранить / Поделиться</button>
-        <button class="btn secondary" id="downloadBtn">👁️ Открыть файл</button>
+        <button class="btn" id="shareBtn">ПОДЕЛИТЬСЯ РЕЗУЛЬТАТОМ ↗</button>
+        <button class="btn secondary" id="downloadBtn">СОХРАНИТЬ</button>
+        <button class="btn secondary" id="againBtn">ЕЩЁ РАЗ</button>
       </div>
-      <button class="btn secondary" id="againBtn" style="margin-top:10px;">🔄 Ещё раз</button>
     </div>
 
     <div class="warn" id="warn">
@@ -787,6 +879,23 @@
     // Исходная RETRO-тема остаётся темой по умолчанию. NIGHT — опциональная
     // тема из нового продуктового концепта; выбор запоминается на устройстве.
     const THEME_STORAGE_KEY = "shakal-ui-theme";
+    let currentAppView = "home";
+    function syncAppChrome() {
+      document.body.dataset.appView = currentAppView;
+      const brand = document.querySelector(".brand");
+      if (!brand) return;
+      if (document.body.dataset.theme !== "night") {
+        brand.textContent = "📱 SHAKAL · 2007 EDITION";
+        return;
+      }
+      brand.textContent = currentAppView === "queue" ? "ОЧЕРЕДЬ" :
+                          currentAppView === "result" ? "ГОТОВО" : "ШАКАЛ-БОТ";
+    }
+    function setAppView(view) {
+      currentAppView = ["home", "queue", "result"].includes(view) ? view : "home";
+      syncAppChrome();
+      if (document.body.dataset.theme === "night") window.scrollTo({ top: 0, behavior: "smooth" });
+    }
     function applyTheme(value) {
       const theme = value === "night" ? "night" : "retro";
       document.body.dataset.theme = theme;
@@ -794,6 +903,7 @@
         btn.classList.toggle("active", btn.dataset.themeChoice === theme);
         btn.setAttribute("aria-pressed", btn.dataset.themeChoice === theme ? "true" : "false");
       });
+      syncAppChrome();
       return theme;
     }
     let initialTheme = "retro";
@@ -842,6 +952,7 @@
     const downloadBtn = $("downloadBtn"), shareBtn = $("shareBtn"), againBtn = $("againBtn");
     const queueWrap = $("queueWrap"), queueList = $("queueList"), queueCount = $("queueCount");
     const queueAddInput = $("queueAddInput"), addMoreBtn = $("addMoreBtn");
+    const queuePresetName = $("queuePresetName"), queuePresetMeta = $("queuePresetMeta"), queueRefBtn = $("queueRefBtn");
     const subPanel = $("subPanel"), subTitle = $("subTitle"), subDetail = $("subDetail");
     const subLimitFill = $("subLimitFill"), subBadge = $("subBadge"), subActionBtn = $("subActionBtn");
     const subActivateRow = $("subActivateRow"), subActivateInput = $("subActivateInput"), subActivateBtn = $("subActivateBtn");
@@ -876,12 +987,11 @@
       // ════════ ЦИФРОВАЯ ЭПОХА (2000-е) ════════
       q_2007: {
         title: "📱 2007 (классика)",
-        // Камерофон 2007: QVGA, цветной CCD-шум, дата и лёгкие строки экрана.
-        width: 320, height: 240,
-        scaleFlags: "",
-        overlayFile: "overlay_2007.png",
-        vfPostScale: "eq=contrast=1.28:brightness=0.06:gamma=1.12:saturation=1.35,hue=h=-2:s=1.06,colorbalance=rs=0.05:gs=0.02:bs=0.05:rh=0.03:bh=-0.03,noise=c0s=16:c1s=20:allf=t",
-        encodeArgs: ["-r", "12", "-c:v", "libx264", "-b:v", "110k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
+        // Фирменный «максимально плохой» режим: крошечный кадр, жёсткая
+        // пикселизация, пересвет, ядовитые цвета, крупный CCD-шум и низкий FPS.
+        width: 176, height: 144,
+        vfPostScale: "eq=contrast=1.4:brightness=0.15:saturation=1.6,noise=c0s=30:c1s=40:allf=t",
+        encodeArgs: ["-r", "10", "-c:v", "libx264", "-b:v", "70k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
                      "-ac", "1", "-ar", "8000", "-c:a", "aac", "-b:a", "16k"]
       },
       q_nul: {
@@ -891,7 +1001,7 @@
         // Звук — хрипящая рация: tremolo + acrusher bits=3.
         width: 480, height: 360,
         scaleFlags: "",
-        vfPostScale: "eq=contrast=1.22:brightness=0.02:gamma=1.28:saturation=1.05,colorbalance=bs=0.04:rh=0.05:bh=-0.03,noise=c0s=14:c1s=18:allf=t",
+        vfPostScale: "eq=contrast=1.38:brightness=0.09:gamma=1.42:saturation=1.32,colorbalance=bs=0.08:rh=0.09:bh=-0.05,noise=c0s=20:c1s=25:allf=t",
         audioFilter: "volume=10,highpass=f=600,lowpass=f=3000,acrusher=bits=3:mode=log,tremolo=f=7:d=0.4",
         encodeArgs: ["-r", "24", "-c:v", "libx264", "-b:v", "250k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
                      "-ac", "1", "-ar", "8000", "-c:a", "aac", "-b:a", "24k"]
@@ -910,16 +1020,16 @@
                      "-ac", "1", "-ar", "11025", "-c:a", "aac", "-b:a", "24k"]
       },
       q_phonk: {
-        title: "🌃 Phonk",
-        // JDM/drift night: лёгкий зелёный в тенях. Зерно умеренное (18/12) —
-        // 45/30 было перебором. Виньетки НЕТ (круг на фото).
-        // unsharp убран для гарантии стабильности (хотя на мелком кадре работал),
-        // дёрзкая резкость держит высокий контраст 1.6.
+        title: "🌃 Phonk JDM",
+        // Ночная JDM/VHS-съёмка по референсам: холодный сине-фиолетовый
+        // оттенок, почти чёрные тени, яркие фары, пониженная насыщенность,
+        // крупное аналоговое зерно и белые камкордерные PLAY/SP/таймкод.
+        // Это намеренно НЕ современный зелёно-пурпурный neon/cyberpunk grade.
         width: 320, height: 426,
         scaleFlags: "",
-        overlayFile: "overlay_phonk.png",
-        vfPostScale: "eq=contrast=1.45:brightness=-0.03:gamma=0.82:saturation=0.85,hue=h=-8:s=0.95,colorbalance=gs=0.16:bs=-0.05:rs=-0.08:gh=0.04,noise=c0s=18:c1s=12:allf=t",
-        encodeArgs: ["-r", "24", "-c:v", "libx264", "-b:v", "300k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
+        overlayFile: "overlay_vhs.png",
+        vfPostScale: "eq=contrast=1.36:brightness=-0.07:gamma=1.28:saturation=0.58,hue=h=3:s=0.92,colorbalance=rs=-0.08:gs=-0.01:bs=0.14:rh=-0.04:gh=0.01:bh=0.08,noise=c0s=24:c1s=17:allf=t",
+        encodeArgs: ["-r", "18", "-c:v", "libx264", "-b:v", "210k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
                      "-c:a", "aac", "-b:a", "32k"]
       },
       q_mafia: {
@@ -947,7 +1057,7 @@
         // тёплые света. Без зерна, чистый кинематографичный кадр.
         width: 480, height: 640,
         scaleFlags: "",
-        vfPostScale: "eq=contrast=1.10:brightness=0.02:gamma=0.94:saturation=0.92,colorbalance=rs=-0.08:gs=0.05:bs=0.09:rh=0.12:gh=0.04:bh=-0.08,noise=c0s=7:c1s=5:allf=t",
+        vfPostScale: "eq=contrast=1.18:brightness=-0.01:gamma=0.90:saturation=0.82,colorbalance=rs=-0.15:gs=0.08:bs=0.18:rh=0.20:gh=0.08:bh=-0.15,noise=c0s=8:c1s=6:allf=t",
         encodeArgs: ["-r", "24", "-c:v", "libx264", "-b:v", "350k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
                      "-c:a", "aac", "-b:a", "48k"]
       },
@@ -962,7 +1072,7 @@
         // матовость эмульсии. Только eq/noise/colorbalance/hue — стабильно.
         width: 480, height: 360,
         scaleFlags: "",
-        vfPostScale: "eq=contrast=1.05:brightness=0.03:gamma=1.05:saturation=1.10,hue=h=-1:s=1.02,colorbalance=rs=0.04:rh=0.06:gs=0.03:bs=-0.03,noise=c0s=12:c1s=9:allf=t",
+        vfPostScale: "eq=contrast=0.92:brightness=0.07:gamma=1.16:saturation=0.92,hue=h=-4:s=0.96,colorbalance=rs=0.10:rh=0.12:gs=0.04:bs=-0.08:bh=-0.06,noise=c0s=17:c1s=12:allf=t",
         encodeArgs: ["-r", "24", "-c:v", "libx264", "-b:v", "340k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
                      "-c:a", "aac", "-b:a", "48k"]
       },
@@ -1059,24 +1169,23 @@
       // ════════ РАННЯЯ ФОТОГРАФИЯ (до 1900) ════════
       q_dag: {
         title: "🪙 Дагерреотип",
-        // Самая ранняя фотография (1839+): зеркальная серебряная пластина,
-        // выцветший низкоконтрастный вид, грубое зерно, холодный металлический
-        // оттенок. boxblur убран (крашил wasm), мягкость старой оптики через
-        // gamma=1.1.
+        // Серебряная пластина: холодная сталь, почти полное Ч/Б, глубокий
+        // чёрный и жёсткие зеркальные света. Намеренно противоположен мягкой
+        // коричневой соляной печати.
         width: 360, height: 360,
         scaleFlags: "",
-        vfPostScale: "eq=contrast=0.82:brightness=0.08:gamma=1.18:saturation=0.05,colorbalance=bs=0.10:gs=0.05:rs=-0.04,noise=c0s=18:c1s=14:allf=t",
+        vfPostScale: "eq=contrast=1.48:brightness=-0.08:gamma=0.82:saturation=0.02,colorbalance=rs=-0.12:gs=0.04:bs=0.24:rh=-0.08:gh=0.04:bh=0.18,noise=c0s=28:c1s=20:allf=t",
         encodeArgs: ["-r", "16", "-c:v", "libx264", "-b:v", "220k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
                      "-c:a", "aac", "-b:a", "32k"]
       },
       q_salt: {
         title: "📜 Соляная печать",
-        // Соляные отпечатки 1850-х: очень мягкая, матовая, рыжевато-коричневая
-        // картинка с низким контрастом и грубой текстурой бумаги.
-        // boxblur убран (крашил wasm), мягкость через gamma=1.0 + низкий контраст.
+        // Соляной отпечаток на бумаге: очень светлый, мягкий, матовый и явно
+        // красно-коричневый. Тени подняты, чёрного почти нет — визуально
+        // далеко от холодной металлической пластины «Дагерреотип».
         width: 360, height: 360,
         scaleFlags: "",
-        vfPostScale: "eq=contrast=0.72:brightness=0.10:gamma=1.18:saturation=0.08,colorbalance=rs=0.22:gs=0.12:bs=-0.10:rh=0.08,noise=c0s=12:allf=t",
+        vfPostScale: "eq=contrast=0.56:brightness=0.19:gamma=1.38:saturation=0.32,colorbalance=rs=0.48:gs=0.27:bs=-0.34:rh=0.24:gh=0.12:bh=-0.22,noise=c0s=14:allf=t",
         encodeArgs: ["-r", "16", "-c:v", "libx264", "-b:v", "200k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
                      "-c:a", "aac", "-b:a", "32k"]
       },
@@ -1094,7 +1203,7 @@
         //   Grain=19, Size=25 → умеренное зерно (noise c0s=20).
         width: 480, height: 640,
         scaleFlags: "",
-        vfPostScale: "eq=contrast=1.12:brightness=-0.04:gamma=1.02:saturation=0.65,colorbalance=gs=0.05:bs=0.10:rh=0.02:rs=-0.03,noise=c0s=10:allf=t",
+        vfPostScale: "eq=contrast=0.88:brightness=-0.01:gamma=1.20:saturation=0.34,colorbalance=gs=0.08:bs=0.20:rh=-0.07:rs=-0.10:bh=0.10,noise=c0s=9:allf=t",
         encodeArgs: ["-r", "24", "-c:v", "libx264", "-b:v", "350k", "-preset", "veryfast", "-pix_fmt", "yuv420p",
                      "-c:a", "aac", "-b:a", "48k"]
       },
@@ -1201,6 +1310,13 @@
         document.querySelectorAll(".preset").forEach(x => x.classList.remove("active"));
         b.classList.add("active");
         currentPreset = b.dataset.preset;
+        const preset = PRESETS[currentPreset];
+        if (queuePresetName) queuePresetName.textContent = preset.title.replace(/^\S+\s*/, "");
+        if (queuePresetMeta) {
+          const fpsIndex = preset.encodeArgs.indexOf("-r");
+          const fps = fpsIndex >= 0 ? preset.encodeArgs[fpsIndex + 1] : "24";
+          queuePresetMeta.textContent = `${preset.width} × ${preset.height} · ${fps} FPS`;
+        }
       });
     });
 
@@ -1733,6 +1849,7 @@
         setStatus("📋 Реферальная ссылка: " + link + " (+" + REF_BONUS + " за переход)");
       }
     });
+    if (queueRefBtn) queueRefBtn.addEventListener("click", () => refShareBtn.click());
 
     // ── Реферальная система ──────────────────────────────────
     // При старте: если юзер пришёл по ссылке ?start=REF_CODE —
@@ -1923,6 +2040,7 @@ const remaining = getRemaining();
     // ── Отмена выбора ─────────────────────────────────────────
     // Сбрасывает очередь в стартовое состояние без перезапуска приложения.
     function resetSelection(showResult) {
+      setAppView("home");
       selectedFiles = [];
       fileInput.value = "";
       cameraInput.value = "";
@@ -1982,6 +2100,7 @@ const remaining = getRemaining();
         );
       }
 
+      setAppView("queue");
       isProcessing = true;
       resultWrap.classList.remove("active");
       progressWrap.classList.add("active");
@@ -2132,7 +2251,10 @@ const remaining = getRemaining();
             lastFileName = null;
           }
           resultWrap.classList.add("active");
-          resultWrap.scrollIntoView({ behavior: "smooth", block: "nearest" });
+          setAppView("result");
+          if (document.body.dataset.theme !== "night") {
+            resultWrap.scrollIntoView({ behavior: "smooth", block: "nearest" });
+          }
           if (succeeded > 1) {
             setStatus(`✅ Готово: ${succeeded} из ${actualTotal} файла(ов)${failed > 0 ? `, ошибок: ${failed}` : ""}. Можно выбрать другой фильтр и обработать ещё раз.`);
           } else if (failed === 0) {
